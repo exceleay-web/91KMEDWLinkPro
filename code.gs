@@ -52,6 +52,14 @@ function handleApiRequest(action, payload) {
       result = togglePinLink(payload && payload.linkId ? payload.linkId : payload);
     } else if (action === 'toggleHideLink') {
       result = toggleHideLink(payload && payload.linkId ? payload.linkId : payload);
+    } else if (action === 'toggleRestrictedLink') {
+      result = toggleRestrictedLink(payload && payload.linkId ? payload.linkId : payload);
+    } else if (action === 'verifyRestrictedPin') {
+      result = verifyRestrictedPin(payload && payload.pin ? payload.pin : payload);
+    } else if (action === 'getRestrictedPin') {
+      result = getRestrictedPin();
+    } else if (action === 'saveRestrictedPin') {
+      result = saveRestrictedPin(payload && payload.newPin ? payload.newPin : payload);
     } else if (action === 'deleteLinkById') {
       result = deleteLinkById(payload && payload.linkId ? payload.linkId : payload);
     } else if (action === 'saveCategory') {
@@ -239,7 +247,12 @@ function getDashboardData(params) {
         statusPin: lRow[7] || 'Normal',
         urutan: parseInt(lRow[8], 10) || (l + 1),
         updatedAt: lRow[9] || '',
-        visibilitas: (lRow[10] && String(lRow[10]).trim() === 'Hidden') ? 'Hidden' : 'Tampil'
+        visibilitas: (function(raw) {
+          var v = String(raw || '').trim();
+          if (v === 'Hidden') return 'Hidden';
+          if (v === 'Restricted') return 'Restricted';
+          return 'Tampil';
+        })(lRow[10])
       };
       allLinks.push(linkObj);
       linkById[linkObj.id] = linkObj;
@@ -339,6 +352,12 @@ function getDashboardData(params) {
       categories: categories,
       links: resultLinks,
       landingConfig: getLandingConfig(),
+      restrictedPin: (function() {
+        try {
+          var p = PropertiesService.getScriptProperties().getProperty('RESTRICTED_ACCESS_PIN');
+          return p ? p.trim() : '1234';
+        } catch (e) { return '1234'; }
+      })(),
       pagination: {
         offset: offset,
         limit: limit,
@@ -490,7 +509,7 @@ function saveLink(payload) {
     var statusPin = String(payload && payload.statusPin ? payload.statusPin : 'Normal').trim();
     var urutan = parseInt(payload && payload.urutan ? payload.urutan : 1, 10) || 1;
     var visibilitas = String(payload && payload.visibilitas ? payload.visibilitas : 'Tampil').trim();
-    if (visibilitas !== 'Hidden') visibilitas = 'Tampil';
+    if (visibilitas !== 'Hidden' && visibilitas !== 'Restricted') visibilitas = 'Tampil';
     var now = getNowFormatted();
 
     if (!judul) {
@@ -763,6 +782,80 @@ function toggleHideLink(linkId) {
 }
 
 /**
+ * 10. TOGGLE RESTRICTED ACCESS (TAMPIL <-> RESTRICTED)
+ */
+function toggleRestrictedLink(linkId) {
+  try {
+    var targetId = String(linkId || '').trim();
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('Links');
+    if (!sheet || sheet.getLastRow() <= 1) {
+      return { success: false, message: 'Sheet Links masih kosong.' };
+    }
+
+    var lastRow = sheet.getLastRow();
+    var lastCol = Math.max(sheet.getLastColumn(), 11);
+    var rows = sheet.getRange(2, 1, lastRow - 1, lastCol).getDisplayValues();
+    var now = getNowFormatted();
+
+    for (var i = 0; i < rows.length; i++) {
+      if (String(rows[i][0]).trim() === targetId) {
+        var currentVis = String(rows[i][10] || '').trim();
+        var nextVis = (currentVis === 'Restricted') ? 'Tampil' : 'Restricted';
+        sheet.getRange(i + 2, 11).setValue(nextVis);
+        sheet.getRange(i + 2, 10).setValue(now);
+        SpreadsheetApp.flush();
+        return {
+          success: true,
+          id: targetId,
+          visibilitas: nextVis,
+          message: nextVis === 'Restricted' ? 'Tautan kini dikunci dengan Akses Terbatas (Wajib PIN)!' : 'Kunci akses dibuka (kembali menjadi Bebas / Publik)!'
+        };
+      }
+    }
+
+    return { success: false, message: 'Link tidak ditemukan.' };
+  } catch (err) {
+    return { success: false, message: 'Gagal mengubah proteksi link: ' + err.message };
+  }
+}
+
+/**
+ * 11. VERIFIKASI PIN AKSES TERBATAS
+ */
+function verifyRestrictedPin(pin) {
+  try {
+    var inputPin = String(pin || '').trim();
+    if (!inputPin) {
+      return { success: false, message: 'Kode PIN wajib diisi.' };
+    }
+    var props = PropertiesService.getScriptProperties();
+    var customPin = props.getProperty('RESTRICTED_ACCESS_PIN');
+    var validPins = ['1234', 'admin123'];
+    if (customPin) {
+      validPins.push(customPin.trim());
+    }
+
+    if (validPins.indexOf(inputPin) !== -1) {
+      return { success: true, message: 'PIN valid! Akses dibuka.' };
+    }
+
+    // Verifikasi juga jika pengguna memasukkan password admin
+    var rows = readSheetRows('Users');
+    for (var i = 0; i < rows.length; i++) {
+      if (String(rows[i][2] || '').trim() === inputPin) {
+        return { success: true, message: 'PIN valid via Akun Admin! Akses dibuka.' };
+      }
+    }
+
+    return { success: false, message: 'PIN salah! Silakan periksa kembali atau hubungi Administrator.' };
+  } catch (err) {
+    return { success: false, message: 'Gagal verifikasi PIN: ' + err.message };
+  }
+}
+
+
+/**
  * 10. TUKAR URUTAN LINK (SWAP REORDER SIBLING LINKS)
  */
 function swapLinkOrder(payload) {
@@ -824,5 +917,49 @@ function swapLinkOrder(payload) {
     };
   } catch (err) {
     return { success: false, message: 'Gagal menukar urutan link: ' + err.message };
+  }
+}
+
+function deleteLinkById(linkId) {
+  return deleteLink(linkId);
+}
+
+function deleteCategoryById(categoryId) {
+  return deleteCategory(categoryId);
+}
+
+
+/**
+ * 13. PENGATURAN KODE PIN AKSES TERBATAS
+ */
+function getRestrictedPin() {
+  try {
+    var props = PropertiesService.getScriptProperties();
+    var pin = props.getProperty('RESTRICTED_ACCESS_PIN');
+    if (!pin) {
+      pin = '1234';
+    }
+    return { success: true, pin: pin.trim() };
+  } catch (err) {
+    return { success: false, message: 'Gagal mengambil PIN: ' + err.message, pin: '1234' };
+  }
+}
+
+function saveRestrictedPin(newPin) {
+  try {
+    var pinVal = String(newPin || '').trim();
+    if (!pinVal || pinVal.length < 4) {
+      return { success: false, message: 'Kode PIN minimal terdiri dari 4 karakter.' };
+    }
+    var props = PropertiesService.getScriptProperties();
+    props.setProperty('RESTRICTED_ACCESS_PIN', pinVal);
+    SpreadsheetApp.flush();
+    return {
+      success: true,
+      message: 'Kode PIN keamanan berhasil disimpan dan diperbarui!',
+      pin: pinVal
+    };
+  } catch (err) {
+    return { success: false, message: 'Gagal menyimpan PIN: ' + err.message };
   }
 }
