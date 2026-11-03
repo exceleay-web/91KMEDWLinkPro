@@ -3425,6 +3425,12 @@
                         <span class="nav-item-title">Pengaturan Landing</span>
                     </div>
                 </div>
+                <div class="nav-item" onclick="openChangePinModal()" title="Atur PIN Akses Terbatas">
+                    <div class="nav-item-left">
+                        <i class="fa-solid fa-key" style="color: var(--accent-orange, #f97316);"></i>
+                        <span class="nav-item-title">Atur PIN Akses</span>
+                    </div>
+                </div>
             </div>
 
             <div class="sidebar-section-header">
@@ -3479,6 +3485,11 @@
                         title="Pengaturan Tampilan Landing Page">
                         <i class="fa-solid fa-sliders" style="color: var(--cyber-orange);"></i>
                         <span>Pengaturan Landing Page</span>
+                    </button>
+                    <button type="button" class="btn btn-glass" onclick="openChangePinModal()"
+                        title="Atur Kunci PIN Akses Terbatas">
+                        <i class="fa-solid fa-key" style="color: var(--accent-orange, #f97316);"></i>
+                        <span>Atur PIN Akses</span>
                     </button>
                     <button type="button" id="btnThemeToggle" class="btn btn-glass" onclick="toggleAppTheme()"
                         title="Ganti Mode Terang / Gelap">
@@ -4004,6 +4015,67 @@
         </div>
     </div>
 
+    <!-- ========================================================================
+       7. MODAL PENGATURAN PIN AKSES TERBATAS (ADMIN MASTER PIN MODAL)
+       ======================================================================== -->
+    <div id="changePinModal" class="modal-backdrop hidden">
+        <div class="modal-dialog" style="max-width: 440px;">
+            <div class="modal-header">
+                <div class="modal-title" style="color: var(--accent-orange, #f97316); display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-key"></i>
+                    <span>Atur PIN Akses Terbatas</span>
+                </div>
+                <button type="button" class="action-icon-btn" onclick="closeChangePinModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div style="padding: 12px 6px;">
+                <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
+                    Kode PIN ini digunakan untuk melindungi tautan bertanda <strong>[🔒 Akses Terbatas]</strong>. Pengunjung publik wajib memasukkan PIN ini untuk membuka tautan tersebut.
+                </p>
+
+                <!-- Current PIN Box -->
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px dashed var(--border-tech); border-radius: 8px; padding: 12px 14px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">PIN Aktif Saat Ini</div>
+                        <div id="currentPinDisplay" style="font-size: 1.15rem; font-weight: 800; color: var(--accent-orange, #f97316); letter-spacing: 3px; font-family: monospace; margin-top: 2px;">••••</div>
+                    </div>
+                    <button type="button" class="action-icon-btn" id="btnToggleCurrentPin" onclick="toggleCurrentPinVisibility()" title="Lihat / Sembunyikan PIN">
+                        <i id="iconToggleCurrentPin" class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+
+                <form id="changePinForm" onsubmit="event.preventDefault(); submitChangePinForm();">
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        <label class="form-label" for="inputNewPin">Kode PIN Baru</label>
+                        <div style="position: relative;">
+                            <input type="password" id="inputNewPin" class="form-control" placeholder="Masukkan 4-12 karakter..." minlength="4" maxlength="20" required autocomplete="new-password">
+                            <button type="button" class="action-icon-btn" onclick="toggleInputPinVisibility('inputNewPin', 'iconToggleNewPin')" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border: none; background: transparent;" title="Lihat PIN">
+                                <i id="iconToggleNewPin" class="fa-solid fa-eye" style="color: var(--text-muted); font-size: 0.8rem;"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label" for="inputConfirmPin">Konfirmasi PIN Baru</label>
+                        <input type="password" id="inputConfirmPin" class="form-control" placeholder="Ketik ulang PIN baru..." minlength="4" maxlength="20" required autocomplete="new-password">
+                    </div>
+
+                    <div id="changePinAlert" style="display: none; font-size: 0.8rem; padding: 8px 12px; border-radius: 6px; margin-bottom: 14px;"></div>
+
+                    <div class="modal-footer" style="padding-top: 8px;">
+                        <button type="button" class="btn btn-glass" onclick="closeChangePinModal()">Batal</button>
+                        <button type="submit" id="btnSaveNewPin" class="btn btn-primary" style="background: linear-gradient(135deg, #f97316, #ea580c); border-color: #f97316;">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>Simpan PIN Baru</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         /**
          * ==========================================================================
@@ -4105,6 +4177,8 @@
                     'toggleHideLink',
                     'toggleRestrictedLink',
                     'verifyRestrictedPin',
+                    'getRestrictedPin',
+                    'saveRestrictedPin',
                     'deleteLink',
                     'deleteLinkById',
                     'saveCategory',
@@ -4138,6 +4212,7 @@
 
         var APP_STATE = {
             user: null,
+            restrictedPin: '1234',
             landingConfig: null,
             categories: [],
             links: [],
@@ -4229,6 +4304,158 @@
                 sidebarIcon.style.color = isLight ? 'var(--accent-purple)' : 'var(--accent-orange)';
             }
         }
+
+
+
+        /**
+         * ==========================================================================
+         * PENGATURAN KODE PIN AKSES TERBATAS (ADMIN PIN MANAGER)
+         * ==========================================================================
+         */
+        function openChangePinModal() {
+            var modal = document.getElementById('changePinModal');
+            var currentPinDisplay = document.getElementById('currentPinDisplay');
+            var inputNew = document.getElementById('inputNewPin');
+            var inputConfirm = document.getElementById('inputConfirmPin');
+            var alertBox = document.getElementById('changePinAlert');
+
+            if (inputNew) {
+                inputNew.value = '';
+                inputNew.type = 'password';
+            }
+            if (inputConfirm) inputConfirm.value = '';
+            if (alertBox) {
+                alertBox.style.display = 'none';
+                alertBox.textContent = '';
+            }
+
+            var iconToggleNew = document.getElementById('iconToggleNewPin');
+            if (iconToggleNew) iconToggleNew.className = 'fa-solid fa-eye';
+
+            var cur = APP_STATE.restrictedPin || '1234';
+            if (currentPinDisplay) {
+                currentPinDisplay.dataset.realPin = cur;
+                currentPinDisplay.textContent = '••••';
+            }
+            var iconToggleCur = document.getElementById('iconToggleCurrentPin');
+            if (iconToggleCur) iconToggleCur.className = 'fa-solid fa-eye';
+
+            if (modal) modal.classList.remove('hidden');
+
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        if (res && res.success && res.pin) {
+                            APP_STATE.restrictedPin = res.pin;
+                            if (currentPinDisplay) {
+                                currentPinDisplay.dataset.realPin = res.pin;
+                                if (currentPinDisplay.textContent !== '••••') {
+                                    currentPinDisplay.textContent = res.pin;
+                                }
+                            }
+                        }
+                    })
+                    .getRestrictedPin();
+            }
+        }
+
+        function closeChangePinModal() {
+            var modal = document.getElementById('changePinModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function toggleCurrentPinVisibility() {
+            var display = document.getElementById('currentPinDisplay');
+            var icon = document.getElementById('iconToggleCurrentPin');
+            if (!display || !icon) return;
+            var realPin = display.dataset.realPin || APP_STATE.restrictedPin || '1234';
+            if (display.textContent === '••••') {
+                display.textContent = realPin;
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                display.textContent = '••••';
+                icon.className = 'fa-solid fa-eye';
+            }
+        }
+
+        function toggleInputPinVisibility(inputId, iconId) {
+            var input = document.getElementById(inputId);
+            var icon = document.getElementById(iconId);
+            if (!input || !icon) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
+        }
+
+        function submitChangePinForm() {
+            var inputNew = document.getElementById('inputNewPin');
+            var inputConfirm = document.getElementById('inputConfirmPin');
+            var alertBox = document.getElementById('changePinAlert');
+            var btn = document.getElementById('btnSaveNewPin');
+
+            var newPin = String(inputNew ? inputNew.value : '').trim();
+            var confirmPin = String(inputConfirm ? inputConfirm.value : '').trim();
+
+            function showAlert(msg, isError) {
+                if (!alertBox) return;
+                alertBox.style.display = 'block';
+                alertBox.textContent = msg;
+                alertBox.style.background = isError ? 'rgba(244, 63, 94, 0.12)' : 'rgba(0, 255, 170, 0.12)';
+                alertBox.style.color = isError ? 'var(--danger, #fda4af)' : 'var(--neon-green, #00ffaa)';
+                alertBox.style.border = '1px solid ' + (isError ? 'rgba(244, 63, 94, 0.3)' : 'rgba(0, 255, 170, 0.3)');
+            }
+
+            if (!newPin || newPin.length < 4) {
+                showAlert('PIN baru minimal harus terdiri dari 4 karakter.', true);
+                if (inputNew) inputNew.focus();
+                return;
+            }
+
+            if (newPin !== confirmPin) {
+                showAlert('Konfirmasi PIN tidak cocok dengan PIN baru.', true);
+                if (inputConfirm) inputConfirm.focus();
+                return;
+            }
+
+            if (btn) btn.disabled = true;
+
+            // Optimistic UI update
+            APP_STATE.restrictedPin = newPin;
+            var curDisplay = document.getElementById('currentPinDisplay');
+            if (curDisplay) {
+                curDisplay.dataset.realPin = newPin;
+                curDisplay.textContent = '••••';
+            }
+
+            showToast('Menyimpan PIN baru ke server...', 'info');
+
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        if (btn) btn.disabled = false;
+                        if (res && res.success) {
+                            closeChangePinModal();
+                            showToast('PIN Akses Terbatas berhasil diubah menjadi: ' + newPin, 'success');
+                        } else {
+                            showAlert((res && res.message) ? res.message : 'Gagal menyimpan PIN.', true);
+                        }
+                    })
+                    .withFailureHandler(function (err) {
+                        if (btn) btn.disabled = false;
+                        showAlert('Gagal koneksi ke server: ' + err.message, true);
+                    })
+                    .saveRestrictedPin(newPin);
+            } else {
+                if (btn) btn.disabled = false;
+                closeChangePinModal();
+                showToast('PIN Akses Terbatas berhasil diubah menjadi: ' + newPin, 'success');
+            }
+        }
+
 
         window.addEventListener('DOMContentLoaded', function () {
             initTheme();
@@ -4433,6 +4660,9 @@
                                 mergeLinksState(res.links || []);
                             } else {
                                 APP_STATE.links = res.links || [];
+                            }
+                            if (res.restrictedPin) {
+                                APP_STATE.restrictedPin = String(res.restrictedPin).trim();
                             }
                             if (res.landingConfig) {
                                 APP_STATE.landingConfig = res.landingConfig;
@@ -5454,8 +5684,9 @@
                 }
             }
 
-            // 1. Cek instan default PIN
-            if (pinVal === '1234' || pinVal === 'admin123') {
+            // 1. Cek instan master PIN lokal (PIN aktif hasil setelan admin / default)
+            var currentMasterPin = APP_STATE.restrictedPin || '1234';
+            if (pinVal === currentMasterPin || pinVal === '1234' || pinVal === 'admin123') {
                 onPinSuccess();
                 return;
             }
