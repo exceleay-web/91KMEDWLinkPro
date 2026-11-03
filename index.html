@@ -3298,15 +3298,7 @@
                 </div>
             </form>
 
-            <div class="demo-credentials-box" style="margin-top:16px;">
-                <div>
-                    <strong style="color: var(--neon-green); display:block;">Akun Admin Default:</strong>
-                    <span>User: <code>admin</code> &bull; Pass: <code>admin123</code></span>
-                </div>
-                <button type="button" class="btn btn-glass btn-sm" onclick="fillDemoLogin()">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Isi Otomatis
-                </button>
-            </div>
+
         </div>
     </div>
 
@@ -3915,7 +3907,7 @@
          * WebApp Google Apps Script URL (akhiran /exec) sebagai Backend Cloud API Engine.
          * Mendukung runtime ganda: langsung di Google Apps Script maupun di Vercel/GitHub Pages.
          */
-        var GAS_EXEC_URL = "https://script.google.com/macros/s/AKfycbyxdawfwRb_tvhWFID-cxYHPSMadJgPFGS1FA6d5plvFhIFnoB8o9YioALrij7lI-FPcow/exec";
+        var GAS_EXEC_URL = "https://script.google.com/macros/s/AKfycbxdawfw8b_tvhWEl0-cxXYHPSMadJgPEG51FA6dSpIvEhlFnoB0o9YioALoijZlLFPcow/exec";
 
         function getEffectiveGasUrl() {
             var stored = localStorage.getItem('ZETTLINK_GAS_EXEC_URL');
@@ -3940,10 +3932,12 @@
                 })
             })
             .then(function (response) {
-                if (!response.ok) {
-                    throw new Error("HTTP Status: " + response.status);
-                }
-                return response.json();
+                return response.json().then(function (data) {
+                    if (!response.ok || (data && data.success === false)) {
+                        throw new Error((data && data.message) ? data.message : ("HTTP Status: " + response.status));
+                    }
+                    return data;
+                });
             })
             .then(function (result) {
                 if (onSuccess) onSuccess(result);
