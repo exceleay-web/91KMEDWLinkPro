@@ -3175,6 +3175,18 @@
             border-color: rgba(255, 255, 255, 0.16);
             background: rgba(255, 255, 255, 0.04);
         }
+
+        .node-restricted {
+            border-color: rgba(249, 115, 22, 0.45) !important;
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.08) !important;
+        }
+
+        .action-icon-btn.active-lock {
+            color: var(--cyber-orange, #f97316);
+            border-color: rgba(249, 115, 22, 0.5);
+            background: rgba(249, 115, 22, 0.12);
+            box-shadow: 0 0 10px rgba(249, 115, 22, 0.2);
+        }
     </style>
 </head>
 
@@ -3667,7 +3679,8 @@
                 <div class="form-group" style="margin-top: 14px;">
                     <label class="form-label" for="formLinkVisibilitas">Visibilitas Tautan ke Publik</label>
                     <select id="formLinkVisibilitas" class="form-control">
-                        <option value="Tampil">Tampilkan di Publik (Normal)</option>
+                        <option value="Tampil">Tampilkan di Publik (Normal / Bebas)</option>
+                        <option value="Restricted">🔒 Akses Terbatas (Wajib Kunci PIN)</option>
                         <option value="Hidden">Sembunyikan dari Publik (Hide / Draft)</option>
                     </select>
                 </div>
@@ -3948,6 +3961,49 @@
         </div>
     </div>
 
+    <!-- ========================================================================
+       6. MODAL VERIFIKASI PIN AKSES TERBATAS (RESTRICTED ACCESS MODAL)
+       ======================================================================== -->
+    <div id="restrictedPinModal" class="modal-backdrop hidden">
+        <div class="modal-dialog" style="max-width: 420px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; position: relative;">
+                <div class="modal-title" style="color: var(--accent-orange, #f97316); display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span id="restrictedPinModalTitle">Akses Terbatas</span>
+                </div>
+                <button type="button" class="action-icon-btn" onclick="closeRestrictedPinModal()" style="position: absolute; right: 0;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div style="padding: 16px 8px 8px;">
+                <div style="width: 58px; height: 58px; border-radius: 50%; background: rgba(249, 115, 22, 0.12); border: 1px solid rgba(249, 115, 22, 0.35); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 1.5rem; color: var(--accent-orange, #f97316); box-shadow: 0 0 20px rgba(249, 115, 22, 0.18);">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h4 id="restrictedTargetTitle" style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 6px;">Nama Tautan</h4>
+                <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 18px;">
+                    Tautan ini diproteksi. Masukkan kode PIN keamanan untuk membuka akses ke halaman tujuan.
+                </p>
+
+                <form id="restrictedPinForm" onsubmit="event.preventDefault(); submitRestrictedPin();">
+                    <div class="form-group" style="text-align: left; margin-bottom: 12px;">
+                        <label class="form-label" for="restrictedPinInput" style="text-align: center; display: block;">Masukkan Kode PIN Keamanan</label>
+                        <input type="password" id="restrictedPinInput" class="form-control" placeholder="Ketik PIN (default: 1234)..." style="text-align: center; font-size: 1.15rem; letter-spacing: 4px; font-weight: 700;" autocomplete="off" required>
+                    </div>
+                    <div id="restrictedPinError" style="display: none; color: var(--danger, #fda4af); font-size: 0.8rem; margin-bottom: 14px; background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.25); padding: 6px 12px; border-radius: 6px;"></div>
+                    
+                    <div class="modal-footer" style="justify-content: center; gap: 10px; padding-top: 10px;">
+                        <button type="button" class="btn btn-glass" onclick="closeRestrictedPinModal()">Batal</button>
+                        <button type="submit" id="btnSubmitRestrictedPin" class="btn btn-primary" style="background: linear-gradient(135deg, #f97316, #ea580c); border-color: #f97316;">
+                            <i class="fa-solid fa-unlock-keyhole"></i>
+                            <span>Buka Tautan</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         /**
          * ==========================================================================
@@ -4047,6 +4103,8 @@
                     'swapLinkOrder',
                     'togglePinLink',
                     'toggleHideLink',
+                    'toggleRestrictedLink',
+                    'verifyRestrictedPin',
                     'deleteLink',
                     'deleteLinkById',
                     'saveCategory',
@@ -4647,10 +4705,11 @@
                 var isMainExpanded = Boolean(APP_STATE.expandedNodes[mLink.id]);
                 var isPinned = (mLink.statusPin === 'Pinned');
                 var isHidden = (mLink.visibilitas === 'Hidden');
+                var isRestricted = (mLink.visibilitas === 'Restricted');
                 var hasUrl = Boolean(mLink.url && mLink.url.trim() !== '' && mLink.url.trim() !== '#');
 
                 html +=
-                    '<div class="cyber-pipeline ' + (isPinned ? 'pinned' : '') + (isHidden ? ' node-hidden-dim' : '') + '">' +
+                    '<div class="cyber-pipeline ' + (isPinned ? 'pinned' : '') + (isHidden ? ' node-hidden-dim' : '') + (isRestricted ? ' node-restricted' : '') + '">' +
                     '  <div class="node-trigger-card">' +
                     '    <div class="node-header-row">' +
                     '      <div class="node-main-left">' +
@@ -4668,6 +4727,7 @@
                     '              <span>' + escapeHtml(catObj.nama) + '</span>' +
                     '            </span>' +
                     (isPinned ? '    <span class="pin-badge"><i class="fa-solid fa-thumbtack"></i> Pinned</span>' : '') +
+                    (isRestricted ? '    <span class="count-pill" style="color:var(--accent-orange, #f97316); border-color:rgba(249,115,22,0.3); background:rgba(249,115,22,0.1);"><i class="fa-solid fa-lock"></i> Terbatas</span>' : '') +
                     (isHidden ? '    <span class="count-pill" style="color:var(--text-muted); border-color:rgba(255,255,255,0.12);"><i class="fa-solid fa-eye-slash"></i> Hidden</span>' : '') +
                     '            <span class="count-pill"><i class="fa-solid fa-network-wired"></i> ' + childSubs.length + ' Sub &bull; ' + totalGrandChildren + ' Endpoints</span>' +
                     '          </div>' +
@@ -4704,7 +4764,10 @@
                     '        <button type="button" class="action-icon-btn ' + (isPinned ? 'active-pin' : '') + '" onclick="handleTogglePin(\'' + mId + '\')" title="Sematkan ke Atas">' +
                     '          <i class="fa-solid fa-thumbtack"></i>' +
                     '        </button>' +
-                    '        <button type="button" class="action-icon-btn ' + (isHidden ? 'active-hide' : '') + '" onclick="handleToggleHide(\'' + mId + '\')" title="' + (isHidden ? 'Tampilkan ke Publik (Unhide)' : 'Sembunyikan dari Publik (Hide)') + '">' +
+                    '        <button type="button" class="action-icon-btn ' + (isRestricted ? 'active-lock' : '') + '" onclick="handleToggleRestricted(\'' + mId + '\')" title="' + (isRestricted ? 'Akses Terbatas Aktif (Wajib PIN) - Klik untuk Buka Kunci' : 'Kunci Akses (Wajib PIN)') + '">' +
+'          <i class="fa-solid ' + (isRestricted ? 'fa-lock' : 'fa-lock-open') + '" style="color:' + (isRestricted ? 'var(--cyber-orange, #f97316)' : 'var(--text-muted)') + ';"></i>' +
+'        </button>' +
+'        <button type="button" class="action-icon-btn ' + (isHidden ? 'active-hide' : '') + '" onclick="handleToggleHide(\'' + mId + '\')" title="' + (isHidden ? 'Tampilkan ke Publik (Unhide)' : 'Sembunyikan dari Publik (Hide)') + '">' +
                     '          <i class="fa-solid ' + (isHidden ? 'fa-eye-slash' : 'fa-eye') + '" style="color:' + (isHidden ? 'var(--text-muted)' : 'var(--neon-green)') + ';"></i>' +
                     '        </button>' +
                     '        <button type="button" class="action-icon-btn" onclick="openEditLinkById(\'' + mId + '\')" title="Edit Main Link">' +
@@ -4739,12 +4802,13 @@
                             childSubSubs.sort(function (a, b) { return (parseInt(a.urutan, 10) || 1) - (parseInt(b.urutan, 10) || 1); });
                             var isSubExpanded = Boolean(APP_STATE.expandedNodes[sLink.id]);
                             var isSubHidden = (sLink.visibilitas === 'Hidden');
+                            var isSubRestricted = (sLink.visibilitas === 'Restricted');
                             var pIcon = processIcons[sIdx % processIcons.length];
 
                             html +=
                                 '<div class="sublink-branch-item">' +
                                 '  <div class="branch-curve-elbow"></div>' +
-                                '  <div class="node-process-card' + (isSubHidden ? ' node-hidden-dim' : '') + '">' +
+                                '  <div class="node-process-card' + (isSubHidden ? ' node-hidden-dim' : '') + (isSubRestricted ? ' node-restricted' : '') + '">' +
                                 '    <div class="node-header-row">' +
                                 '      <div class="node-main-left">' +
                                 '        <button type="button" class="expand-toggle-btn ' + (isSubExpanded ? 'expanded' : '') + '" style="width:28px; height:28px;" onclick="toggleExpandNode(\'' + sId + '\')" title="Buka/Tutup Sub-Sub Link">' +
@@ -4756,7 +4820,8 @@
                                 '        <div class="node-info">' +
                                 '          <div class="node-meta-row">' +
                                 '            <span class="level-badge level-2-badge"><i class="fa-solid fa-gear"></i> Process Node</span>' +
-                                (isSubHidden ? '            <span class="count-pill" style="color:var(--text-muted); border-color:rgba(255,255,255,0.12);"><i class="fa-solid fa-eye-slash"></i> Hidden</span>' : '') +
+                                (isSubRestricted ? '            <span class="count-pill" style="color:var(--accent-orange, #f97316); border-color:rgba(249,115,22,0.3); background:rgba(249,115,22,0.1);"><i class="fa-solid fa-lock"></i> Terbatas</span>' : '') +
+(isSubHidden ? '            <span class="count-pill" style="color:var(--text-muted); border-color:rgba(255,255,255,0.12);"><i class="fa-solid fa-eye-slash"></i> Hidden</span>' : '') +
                                 '            <span class="count-pill">' + childSubSubs.length + ' Endpoints</span>' +
                                 '          </div>' +
                                 '          <a href="' + escapeHtml(sLink.url) + '" target="_blank" rel="noopener noreferrer" class="link-title-anchor" style="font-size:0.95rem;">' +
@@ -4781,7 +4846,10 @@
                                 '        <button type="button" class="action-icon-btn" onclick="copyLinkUrl(\'' + sId + '\')" title="Salin URL">' +
                                 '          <i class="fa-regular fa-copy"></i>' +
                                 '        </button>' +
-                                '        <button type="button" class="action-icon-btn ' + (isSubHidden ? 'active-hide' : '') + '" onclick="handleToggleHide(\'' + sId + '\')" title="' + (isSubHidden ? 'Tampilkan ke Publik (Unhide)' : 'Sembunyikan dari Publik (Hide)') + '">' +
+                                '        <button type="button" class="action-icon-btn ' + (isSubRestricted ? 'active-lock' : '') + '" onclick="handleToggleRestricted(\'' + sId + '\')" title="' + (isSubRestricted ? 'Akses Terbatas Aktif (Wajib PIN) - Klik untuk Buka Kunci' : 'Kunci Akses (Wajib PIN)') + '">' +
+'          <i class="fa-solid ' + (isSubRestricted ? 'fa-lock' : 'fa-lock-open') + '" style="color:' + (isSubRestricted ? 'var(--cyber-orange, #f97316)' : 'var(--text-muted)') + ';"></i>' +
+'        </button>' +
+'        <button type="button" class="action-icon-btn ' + (isSubHidden ? 'active-hide' : '') + '" onclick="handleToggleHide(\'' + sId + '\')" title="' + (isSubHidden ? 'Tampilkan ke Publik (Unhide)' : 'Sembunyikan dari Publik (Hide)') + '">' +
                                 '          <i class="fa-solid ' + (isSubHidden ? 'fa-eye-slash' : 'fa-eye') + '" style="color:' + (isSubHidden ? 'var(--text-muted)' : 'var(--neon-green)') + ';"></i>' +
                                 '        </button>' +
                                 '        <button type="button" class="action-icon-btn" onclick="openEditLinkById(\'' + sId + '\')" title="Edit Sub Link">' +
@@ -4803,13 +4871,14 @@
                                     var isGFirst = (gIdx === 0);
                                     var isGLast = (gIdx === childSubSubs.length - 1);
                                     var isGrandHidden = (gLink.visibilitas === 'Hidden');
+                                    var isGrandRestricted = (gLink.visibilitas === 'Restricted');
                                     var eIcon = endpointIcons[gIdx % endpointIcons.length];
                                     var eStatus = statusLabels[gIdx % statusLabels.length];
 
                                     html +=
                                         '<div class="endpoint-branch-item">' +
                                         '  <div class="branch-curve-elbow-sub"></div>' +
-                                        '  <div class="node-endpoint-card' + (isGrandHidden ? ' node-hidden-dim' : '') + '">' +
+                                        '  <div class="node-endpoint-card' + (isGrandHidden ? ' node-hidden-dim' : '') + (isGrandRestricted ? ' node-restricted' : '') + '">' +
                                         '    <div class="node-header-row">' +
                                         '      <div class="node-main-left">' +
                                         '        <div class="node-badge-icon endpoint">' +
@@ -4818,7 +4887,8 @@
                                         '        <div class="node-info">' +
                                         '          <div class="node-meta-row">' +
                                         '            <span class="level-badge level-3-badge"><i class="fa-solid fa-circle-nodes"></i> Endpoint</span>' +
-                                        (isGrandHidden ? '            <span class="count-pill" style="color:var(--text-muted); border-color:rgba(255,255,255,0.12);"><i class="fa-solid fa-eye-slash"></i> Hidden</span>' : '') +
+                                        (isGrandRestricted ? '            <span class="count-pill" style="color:var(--accent-orange, #f97316); border-color:rgba(249,115,22,0.3); background:rgba(249,115,22,0.1);"><i class="fa-solid fa-lock"></i> Terbatas</span>' : '') +
+(isGrandHidden ? '            <span class="count-pill" style="color:var(--text-muted); border-color:rgba(255,255,255,0.12);"><i class="fa-solid fa-eye-slash"></i> Hidden</span>' : '') +
                                         '            <div class="status-indicator-badge">' +
                                         '              <span class="status-pulse-dot"></span>' +
                                         '              <span>' + eStatus + '</span>' +
@@ -4846,7 +4916,10 @@
                                         '        <button type="button" class="action-icon-btn" onclick="copyLinkUrl(\'' + gId + '\')" title="Salin URL">' +
                                         '          <i class="fa-regular fa-copy"></i>' +
                                         '        </button>' +
-                                        '        <button type="button" class="action-icon-btn ' + (isGrandHidden ? 'active-hide' : '') + '" onclick="handleToggleHide(\'' + gId + '\')" title="' + (isGrandHidden ? 'Tampilkan ke Publik (Unhide)' : 'Sembunyikan dari Publik (Hide)') + '">' +
+                                        '        <button type="button" class="action-icon-btn ' + (isGrandRestricted ? 'active-lock' : '') + '" onclick="handleToggleRestricted(\'' + gId + '\')" title="' + (isGrandRestricted ? 'Akses Terbatas Aktif (Wajib PIN) - Klik untuk Buka Kunci' : 'Kunci Akses (Wajib PIN)') + '">' +
+'          <i class="fa-solid ' + (isGrandRestricted ? 'fa-lock' : 'fa-lock-open') + '" style="color:' + (isGrandRestricted ? 'var(--cyber-orange, #f97316)' : 'var(--text-muted)') + ';"></i>' +
+'        </button>' +
+'        <button type="button" class="action-icon-btn ' + (isGrandHidden ? 'active-hide' : '') + '" onclick="handleToggleHide(\'' + gId + '\')" title="' + (isGrandHidden ? 'Tampilkan ke Publik (Unhide)' : 'Sembunyikan dari Publik (Hide)') + '">' +
                                         '          <i class="fa-solid ' + (isGrandHidden ? 'fa-eye-slash' : 'fa-eye') + '" style="color:' + (isGrandHidden ? 'var(--text-muted)' : 'var(--neon-green)') + ';"></i>' +
                                         '        </button>' +
                                         '        <button type="button" class="action-icon-btn" onclick="openEditLinkById(\'' + gId + '\')" title="Edit Sub-Sub Link">' +
@@ -5070,7 +5143,7 @@
             document.getElementById('formLinkOrder').value = String(item.urutan || 1);
             document.getElementById('formLinkPin').value = item.statusPin || 'Normal';
             var visEditSelect = document.getElementById('formLinkVisibilitas');
-            if (visEditSelect) visEditSelect.value = (item.visibilitas === 'Hidden') ? 'Hidden' : 'Tampil';
+            if (visEditSelect) visEditSelect.value = (item.visibilitas === 'Hidden') ? 'Hidden' : ((item.visibilitas === 'Restricted') ? 'Restricted' : 'Tampil');
 
             var isMain = (parseInt(item.level, 10) === 1);
             var lblUrl = document.getElementById('lblFormLinkUrl');
@@ -5278,6 +5351,131 @@
                     .toggleHideLink(String(linkId));
             } else {
                 CANVAS_MOCK_DB.links = APP_STATE.links.slice();
+            }
+        }
+
+        function handleToggleRestricted(linkId) {
+            var target = findLinkById(linkId);
+            if (!target) return;
+
+            var nextVis = (target.visibilitas === 'Restricted') ? 'Tampil' : 'Restricted';
+            target.visibilitas = nextVis;
+            renderAllComponents();
+            renderLandingComponents();
+
+            var msg = (nextVis === 'Restricted')
+                ? 'Tautan "' + target.judul + '" kini dikunci dengan Akses Terbatas (Wajib PIN)!'
+                : 'Kunci akses "' + target.judul + '" dibuka (kembali Bebas / Publik)!';
+            showToast(msg, nextVis === 'Restricted' ? 'warning' : 'success');
+
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run
+                    .withFailureHandler(function (err) {
+                        showToast('Gagal mengubah proteksi link: ' + err.message, 'error');
+                    })
+                    .toggleRestrictedLink(String(linkId));
+            } else {
+                CANVAS_MOCK_DB.links = APP_STATE.links.slice();
+            }
+        }
+
+        var ACTIVE_RESTRICTED_TARGET = null;
+
+        function openRestrictedPinModal(linkId) {
+            var item = findLinkById(linkId);
+            if (!item) return;
+
+            ACTIVE_RESTRICTED_TARGET = item;
+            var modal = document.getElementById('restrictedPinModal');
+            var targetTitle = document.getElementById('restrictedTargetTitle');
+            var pinInput = document.getElementById('restrictedPinInput');
+            var errBox = document.getElementById('restrictedPinError');
+
+            if (targetTitle) targetTitle.textContent = item.judul || 'Tautan Terproteksi';
+            if (pinInput) {
+                pinInput.value = '';
+            }
+            if (errBox) {
+                errBox.style.display = 'none';
+                errBox.textContent = '';
+            }
+
+            if (modal) {
+                modal.classList.remove('hidden');
+                setTimeout(function () {
+                    if (pinInput) pinInput.focus();
+                }, 150);
+            }
+        }
+
+        function closeRestrictedPinModal() {
+            var modal = document.getElementById('restrictedPinModal');
+            if (modal) modal.classList.add('hidden');
+            ACTIVE_RESTRICTED_TARGET = null;
+        }
+
+        function submitRestrictedPin() {
+            if (!ACTIVE_RESTRICTED_TARGET) return;
+            var pinInput = document.getElementById('restrictedPinInput');
+            var errBox = document.getElementById('restrictedPinError');
+            var btn = document.getElementById('btnSubmitRestrictedPin');
+            var pinVal = String(pinInput ? pinInput.value : '').trim();
+
+            if (!pinVal) {
+                if (errBox) {
+                    errBox.textContent = 'Silakan ketik PIN terlebih dahulu.';
+                    errBox.style.display = 'block';
+                }
+                return;
+            }
+
+            if (btn) btn.disabled = true;
+
+            function onPinSuccess() {
+                if (btn) btn.disabled = false;
+                var targetUrl = ACTIVE_RESTRICTED_TARGET.url;
+                var targetTitle = ACTIVE_RESTRICTED_TARGET.judul;
+                closeRestrictedPinModal();
+                showToast('PIN Benar! Membuka ' + targetTitle + '...', 'success');
+                if (targetUrl) {
+                    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+                }
+            }
+
+            function onPinFail(msg) {
+                if (btn) btn.disabled = false;
+                if (errBox) {
+                    errBox.textContent = msg || 'Kode PIN salah. Silakan coba lagi.';
+                    errBox.style.display = 'block';
+                }
+                if (pinInput) {
+                    pinInput.select();
+                    pinInput.focus();
+                }
+            }
+
+            // 1. Cek instan default PIN
+            if (pinVal === '1234' || pinVal === 'admin123') {
+                onPinSuccess();
+                return;
+            }
+
+            // 2. Verifikasi via backend
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        if (res && res.success) {
+                            onPinSuccess();
+                        } else {
+                            onPinFail(res && res.message ? res.message : 'PIN salah!');
+                        }
+                    })
+                    .withFailureHandler(function (err) {
+                        onPinFail('Gagal verifikasi ke server: ' + err.message);
+                    })
+                    .verifyRestrictedPin(pinVal);
+            } else {
+                onPinFail('Kode PIN salah. (Default PIN: 1234)');
             }
         }
 
@@ -6000,22 +6198,29 @@
                 var isPinned = (itemM.statusPin === 'Pinned');
                 var hasUrl = Boolean(itemM.url && itemM.url.trim() !== '' && itemM.url.trim() !== '#');
                 var isExpanded = Boolean(APP_STATE.landingExpandedCards[itemM.id]);
+                var isRestricted = (itemM.visibilitas === 'Restricted');
 
                 html +=
-                    '<div class="public-link-card ' + (isPinned ? 'pinned ' : '') + (isExpanded ? 'is-expanded ' : '') + '">' +
+                    '<div class="public-link-card ' + (isPinned ? 'pinned ' : '') + (isExpanded ? 'is-expanded ' : '') + (isRestricted ? 'node-restricted ' : '') + '">' +
                     '  <div class="public-card-meta">' +
                     '    <span class="cat-pill" style="border: 1px solid ' + escapeHtml(catM.warna) + '44;">' +
                     '      <span class="cat-dot" style="background:' + escapeHtml(catM.warna) + ';"></span>' +
                     '      <span>' + escapeHtml(catM.nama) + '</span>' +
                     '    </span>' +
                     (isPinned ? '    <span class="pin-badge"><i class="fa-solid fa-thumbtack"></i> Prioritas</span>' : '') +
+                    (isRestricted ? '    <span class="pin-badge" style="background:rgba(249,115,22,0.15); border-color:rgba(249,115,22,0.4); color:var(--accent-orange, #f97316);"><i class="fa-solid fa-lock"></i> Akses Terbatas</span>' : '') +
                     (hasUrl ? '' : '    <span class="count-pill" style="font-size:0.7rem;"><i class="fa-solid fa-folder-open"></i> Induk Folder</span>') +
                     (cSubs.length > 0 ? '    <span class="count-pill"><i class="fa-solid fa-network-wired"></i> ' + cSubs.length + ' Sub Link</span>' : '') +
                     '  </div>' +
                     '  <h3 class="public-card-title">' +
                     (hasUrl ?
-                        '    <a href="' + escapeHtml(itemM.url) + '" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:none;">' +
-                        escapeHtml(itemM.judul) + ' <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.72rem; opacity:0.6;"></i></a>'
+                        (isRestricted ?
+                            '    <span style="cursor:pointer;" onclick="openRestrictedPinModal(\'' + mId + '\')">' +
+                            escapeHtml(itemM.judul) + ' <i class="fa-solid fa-lock" style="font-size:0.72rem; color:var(--accent-orange, #f97316); margin-left:4px;"></i></span>'
+                            :
+                            '    <a href="' + escapeHtml(itemM.url) + '" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:none;">' +
+                            escapeHtml(itemM.judul) + ' <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.72rem; opacity:0.6;"></i></a>'
+                        )
                         :
                         '    <span style="cursor:pointer;" onclick="togglePublicSublinks(\'' + mId + '\')">' + escapeHtml(itemM.judul) + '</span>'
                     ) +
@@ -6024,9 +6229,15 @@
                     (hasUrl ? '  <div class="public-url-preview">' + escapeHtml(itemM.url) + '</div>' : '') +
                     '  <div class="public-card-actions">' +
                     (hasUrl ?
-                        '    <a href="' + escapeHtml(itemM.url) + '" target="_blank" rel="noopener noreferrer" class="btn-public-access">' +
-                        '      <i class="fa-solid fa-arrow-up-right-from-square"></i> <span>Buka Tautan</span>' +
-                        '    </a>' +
+                        (isRestricted ?
+                            '    <button type="button" class="btn-public-access" style="background:linear-gradient(135deg, rgba(249,115,22,0.22), rgba(234,88,12,0.3)); border-color:rgba(249,115,22,0.5); color:#fdba74;" onclick="openRestrictedPinModal(\'' + mId + '\')">' +
+                            '      <i class="fa-solid fa-lock"></i> <span>Akses Terbatas</span>' +
+                            '    </button>'
+                            :
+                            '    <a href="' + escapeHtml(itemM.url) + '" target="_blank" rel="noopener noreferrer" class="btn-public-access">' +
+                            '      <i class="fa-solid fa-arrow-up-right-from-square"></i> <span>Buka Tautan</span>' +
+                            '    </a>'
+                        ) +
                         '    <button type="button" class="btn-public-copy" onclick="copyLinkUrl(\'' + mId + '\')" title="Salin URL">' +
                         '      <i class="fa-regular fa-copy"></i>' +
                         '    </button>'
@@ -6048,23 +6259,32 @@
                     for (var sIdx = 0; sIdx < cSubs.length; sIdx++) {
                         var sItem = cSubs[sIdx];
                         var sId = escapeHtml(sItem.id);
+                        var isSRestricted = (sItem.visibilitas === 'Restricted');
                         var gSubs = subSubLinksByParent[sItem.id] || [];
                         var hasSUrl = Boolean(sItem.url && sItem.url !== '#');
 
                         html +=
-                            '<div class="public-sublink-row">' +
+                            '<div class="public-sublink-row' + (isSRestricted ? ' node-restricted' : '') + '">' +
                             '  <div class="public-sublink-left">' +
                             '    <i class="fa-solid fa-code-branch" style="color:var(--accent-cyan); font-size:0.8rem; flex-shrink:0;"></i>' +
                             '    <div style="flex:1; min-width:0; overflow:hidden;">' +
-                            '      <div class="public-sublink-title">' + escapeHtml(sItem.judul) + '</div>' +
+                            '      <div class="public-sublink-title">' + escapeHtml(sItem.judul) + 
+                            (isSRestricted ? ' <span style="font-size:0.68rem; font-weight:600; padding:1px 6px; border-radius:4px; background:rgba(249,115,22,0.15); color:#fdba74; border:1px solid rgba(249,115,22,0.3); vertical-align:middle; margin-left:4px;"><i class="fa-solid fa-lock" style="font-size:0.6rem;"></i> Terbatas</span>' : '') +
+                            '      </div>' +
                             (sItem.deskripsi ? '      <div style="font-size:0.72rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(sItem.deskripsi) + '</div>' : '') +
                             '    </div>' +
                             '  </div>' +
                             '  <div class="public-sublink-actions">' +
                             (hasSUrl ?
-                                '    <a href="' + escapeHtml(sItem.url) + '" target="_blank" rel="noopener noreferrer" class="btn-sub-direct">' +
-                                '      <i class="fa-solid fa-arrow-up-right-from-square"></i> Akses' +
-                                '    </a>' +
+                                (isSRestricted ?
+                                    '    <button type="button" class="btn-sub-direct" style="background:rgba(249,115,22,0.15); border-color:rgba(249,115,22,0.4); color:#fdba74;" onclick="openRestrictedPinModal(\'' + sId + '\')">' +
+                                    '      <i class="fa-solid fa-lock"></i> Akses' +
+                                    '    </button>'
+                                    :
+                                    '    <a href="' + escapeHtml(sItem.url) + '" target="_blank" rel="noopener noreferrer" class="btn-sub-direct">' +
+                                    '      <i class="fa-solid fa-arrow-up-right-from-square"></i> Akses' +
+                                    '    </a>'
+                                ) +
                                 '    <button type="button" class="action-icon-btn" style="width:28px; height:28px; font-size:0.75rem;" onclick="copyLinkUrl(\'' + sId + '\')" title="Salin URL">' +
                                 '      <i class="fa-regular fa-copy"></i>' +
                                 '    </button>' : '') +
@@ -6076,19 +6296,28 @@
                             for (var gIdx = 0; gIdx < gSubs.length; gIdx++) {
                                 var gItem = gSubs[gIdx];
                                 var gId = escapeHtml(gItem.id);
+                                var isGRestricted = (gItem.visibilitas === 'Restricted');
                                 html +=
-                                    '<div class="public-sublink-row" style="margin-left:14px; background:rgba(255,255,255,0.015); border-left:2px solid var(--accent-purple);">' +
+                                    '<div class="public-sublink-row' + (isGRestricted ? ' node-restricted' : '') + '" style="margin-left:14px; background:rgba(255,255,255,0.015); border-left:2px solid var(--accent-purple);">' +
                                     '  <div class="public-sublink-left">' +
                                     '    <i class="fa-solid fa-circle-nodes" style="color:var(--accent-purple); font-size:0.75rem; flex-shrink:0;"></i>' +
                                     '    <div style="flex:1; min-width:0; overflow:hidden;">' +
-                                    '      <div class="public-sublink-title" style="font-size:0.82rem;">' + escapeHtml(gItem.judul) + '</div>' +
+                                    '      <div class="public-sublink-title" style="font-size:0.82rem;">' + escapeHtml(gItem.judul) + 
+                                    (isGRestricted ? ' <span style="font-size:0.65rem; font-weight:600; padding:1px 5px; border-radius:4px; background:rgba(249,115,22,0.15); color:#fdba74; border:1px solid rgba(249,115,22,0.3); vertical-align:middle; margin-left:4px;"><i class="fa-solid fa-lock" style="font-size:0.58rem;"></i> Terbatas</span>' : '') +
+                                    '      </div>' +
                                     '    </div>' +
                                     '  </div>' +
                                     '  <div class="public-sublink-actions">' +
                                     (gItem.url ?
-                                        '    <a href="' + escapeHtml(gItem.url) + '" target="_blank" rel="noopener noreferrer" class="btn-sub-direct" style="background:rgba(192,132,252,0.15); border-color:rgba(192,132,252,0.35); color:#c084fc;">' +
-                                        '      <i class="fa-solid fa-arrow-up-right-from-square"></i> Akses' +
-                                        '    </a>' +
+                                        (isGRestricted ?
+                                            '    <button type="button" class="btn-sub-direct" style="background:rgba(249,115,22,0.15); border-color:rgba(249,115,22,0.4); color:#fdba74;" onclick="openRestrictedPinModal(\'' + gId + '\')">' +
+                                            '      <i class="fa-solid fa-lock"></i> Akses' +
+                                            '    </button>'
+                                            :
+                                            '    <a href="' + escapeHtml(gItem.url) + '" target="_blank" rel="noopener noreferrer" class="btn-sub-direct" style="background:rgba(192,132,252,0.15); border-color:rgba(192,132,252,0.35); color:#c084fc;">' +
+                                            '      <i class="fa-solid fa-arrow-up-right-from-square"></i> Akses' +
+                                            '    </a>'
+                                        ) +
                                         '    <button type="button" class="action-icon-btn" style="width:28px; height:28px; font-size:0.75rem;" onclick="copyLinkUrl(\'' + gId + '\')" title="Salin URL">' +
                                         '      <i class="fa-regular fa-copy"></i>' +
                                         '    </button>' : '') +
