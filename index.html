@@ -3843,18 +3843,7 @@
                             placeholder="© 2026 91KMEDW Link Pro • Portal Tautan Publik & Manajemen Terpadu">
                     </div>
 
-                    <div style="border-top:1px dashed var(--border-tech); margin:14px 0 16px;"></div>
 
-                    <div class="form-group">
-                        <label class="form-label" for="cfgGasExecUrl">
-                            <i class="fa-solid fa-cloud" style="color:var(--cyber-orange); margin-right:6px;"></i> URL Backend Google Apps Script (/exec)
-                        </label>
-                        <input type="url" id="cfgGasExecUrl" class="form-control"
-                            placeholder="https://script.google.com/macros/s/.../exec">
-                        <small style="color:var(--text-muted); font-size:0.75rem; display:block; margin-top:4px;">
-                            Penting untuk Vercel: Tautan deployment Google Apps Script Anda (akhiran /exec) sebagai mesin database cloud.
-                        </small>
-                    </div>
                 </div>
 
                 <div class="modal-footer"
@@ -6223,8 +6212,7 @@
             var elFootCopy = document.getElementById('cfgFooterCopyrightText');
             if (elFootCopy) elFootCopy.value = cfg.footerCopyrightText || '';
 
-            var elGasUrl = document.getElementById('cfgGasExecUrl');
-            if (elGasUrl) elGasUrl.value = getEffectiveGasUrl();
+
 
             switchLandingSettingsTab('hero');
             modal.classList.remove('hidden');
@@ -6283,10 +6271,7 @@
                 footerCopyrightText: (document.getElementById('cfgFooterCopyrightText') ? document.getElementById('cfgFooterCopyrightText').value : '').trim()
             };
 
-            var elGasUrl = document.getElementById('cfgGasExecUrl');
-            if (elGasUrl && elGasUrl.value.trim().indexOf('http') === 0) {
-                localStorage.setItem('ZETTLINK_GAS_EXEC_URL', elGasUrl.value.trim());
-            }
+
 
             // Optimistic update
             APP_STATE.landingConfig = payload;
