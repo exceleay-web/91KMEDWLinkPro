@@ -2485,12 +2485,15 @@
             display: none;
         }
 
-        /* Public Links Cards Grid */
+        /* Public Links Cards Grid - Dynamic Centered Auto-Balancing */
         .public-links-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-            gap: 20px;
-            align-items: start;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 24px;
+            align-items: stretch;
+            width: 100%;
+            margin: 0 auto;
         }
 
         .public-link-card {
@@ -2503,8 +2506,9 @@
             flex-direction: column;
             transition: all 0.22s ease;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-            min-width: 0;
-            max-width: 100%;
+            flex: 1 1 360px;
+            max-width: 440px;
+            min-width: 320px;
             box-sizing: border-box;
         }
 
@@ -2946,7 +2950,15 @@
             }
 
             .public-links-grid {
-                grid-template-columns: 1fr;
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .public-link-card {
+                max-width: 100%;
+                min-width: 0;
+                flex: 1 1 auto;
             }
 
             .landing-hero-section {
