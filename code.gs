@@ -355,8 +355,8 @@ function getDashboardData(params) {
       restrictedPin: (function() {
         try {
           var p = PropertiesService.getScriptProperties().getProperty('RESTRICTED_ACCESS_PIN');
-          return p ? p.trim() : '1234';
-        } catch (e) { return '1234'; }
+          return p ? p.trim() : '';
+        } catch (e) { return ''; }
       })(),
       pagination: {
         offset: offset,
@@ -831,21 +831,12 @@ function verifyRestrictedPin(pin) {
     }
     var props = PropertiesService.getScriptProperties();
     var customPin = props.getProperty('RESTRICTED_ACCESS_PIN');
-    var validPins = ['1234', 'admin123'];
-    if (customPin) {
-      validPins.push(customPin.trim());
+    if (!customPin || !customPin.trim()) {
+      return { success: false, message: 'PIN Akses Terbatas belum diatur oleh Administrator.' };
     }
 
-    if (validPins.indexOf(inputPin) !== -1) {
+    if (inputPin === customPin.trim()) {
       return { success: true, message: 'PIN valid! Akses dibuka.' };
-    }
-
-    // Verifikasi juga jika pengguna memasukkan password admin
-    var rows = readSheetRows('Users');
-    for (var i = 0; i < rows.length; i++) {
-      if (String(rows[i][2] || '').trim() === inputPin) {
-        return { success: true, message: 'PIN valid via Akun Admin! Akses dibuka.' };
-      }
     }
 
     return { success: false, message: 'PIN salah! Silakan periksa kembali atau hubungi Administrator.' };
@@ -936,12 +927,9 @@ function getRestrictedPin() {
   try {
     var props = PropertiesService.getScriptProperties();
     var pin = props.getProperty('RESTRICTED_ACCESS_PIN');
-    if (!pin) {
-      pin = '1234';
-    }
-    return { success: true, pin: pin.trim() };
+    return { success: true, pin: pin ? pin.trim() : '' };
   } catch (err) {
-    return { success: false, message: 'Gagal mengambil PIN: ' + err.message, pin: '1234' };
+    return { success: false, message: 'Gagal mengambil PIN: ' + err.message, pin: '' };
   }
 }
 
