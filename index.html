@@ -3999,7 +3999,7 @@
                 <form id="restrictedPinForm" onsubmit="event.preventDefault(); submitRestrictedPin();">
                     <div class="form-group" style="text-align: left; margin-bottom: 12px;">
                         <label class="form-label" for="restrictedPinInput" style="text-align: center; display: block;">Masukkan Kode PIN Keamanan</label>
-                        <input type="password" id="restrictedPinInput" class="form-control" placeholder="Ketik PIN (default: 1234)..." style="text-align: center; font-size: 1.15rem; letter-spacing: 4px; font-weight: 700;" autocomplete="off" required>
+                        <input type="password" id="restrictedPinInput" class="form-control" placeholder="Ketik Kode PIN Keamanan..." style="text-align: center; font-size: 1.15rem; letter-spacing: 4px; font-weight: 700;" autocomplete="off" required>
                     </div>
                     <div id="restrictedPinError" style="display: none; color: var(--danger, #fda4af); font-size: 0.8rem; margin-bottom: 14px; background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.25); padding: 6px 12px; border-radius: 6px;"></div>
                     
@@ -4212,7 +4212,7 @@
 
         var APP_STATE = {
             user: null,
-            restrictedPin: '1234',
+            restrictedPin: '',
             landingConfig: null,
             categories: [],
             links: [],
@@ -4332,10 +4332,10 @@
             var iconToggleNew = document.getElementById('iconToggleNewPin');
             if (iconToggleNew) iconToggleNew.className = 'fa-solid fa-eye';
 
-            var cur = APP_STATE.restrictedPin || '1234';
+            var cur = APP_STATE.restrictedPin || '';
             if (currentPinDisplay) {
                 currentPinDisplay.dataset.realPin = cur;
-                currentPinDisplay.textContent = '••••';
+                currentPinDisplay.textContent = cur ? '••••' : '(Belum Diatur)';
             }
             var iconToggleCur = document.getElementById('iconToggleCurrentPin');
             if (iconToggleCur) iconToggleCur.className = 'fa-solid fa-eye';
@@ -4368,12 +4368,12 @@
             var display = document.getElementById('currentPinDisplay');
             var icon = document.getElementById('iconToggleCurrentPin');
             if (!display || !icon) return;
-            var realPin = display.dataset.realPin || APP_STATE.restrictedPin || '1234';
-            if (display.textContent === '••••') {
-                display.textContent = realPin;
+            var realPin = display.dataset.realPin || APP_STATE.restrictedPin || '';
+            if (display.textContent === '••••' || display.textContent === '(Belum Diatur)') {
+                display.textContent = realPin || '(Belum Diatur)';
                 icon.className = 'fa-solid fa-eye-slash';
             } else {
-                display.textContent = '••••';
+                display.textContent = realPin ? '••••' : '(Belum Diatur)';
                 icon.className = 'fa-solid fa-eye';
             }
         }
@@ -5249,6 +5249,13 @@
                 return;
             }
 
+            // Keamanan: Tolak salin jika tautan berstatus Akses Terbatas dan pengunjung belum login sebagai Admin
+            if (!APP_STATE.user && target.visibilitas === 'Restricted') {
+                showToast('Tautan ini diproteksi Akses Terbatas. Silakan buka kunci dengan PIN.', 'warning');
+                openRestrictedPinModal(linkId);
+                return;
+            }
+
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(target.url).then(function () {
                     showToast('URL berhasil disalin: ' + target.url, 'success');
@@ -5684,9 +5691,9 @@
                 }
             }
 
-            // 1. Cek instan master PIN lokal (PIN aktif hasil setelan admin / default)
-            var currentMasterPin = APP_STATE.restrictedPin || '1234';
-            if (pinVal === currentMasterPin || pinVal === '1234' || pinVal === 'admin123') {
+            // 1. Cek instan master PIN lokal (PIN aktif yang disetel Admin)
+            var currentMasterPin = APP_STATE.restrictedPin;
+            if (currentMasterPin && pinVal === currentMasterPin) {
                 onPinSuccess();
                 return;
             }
@@ -5698,7 +5705,7 @@
                         if (res && res.success) {
                             onPinSuccess();
                         } else {
-                            onPinFail(res && res.message ? res.message : 'PIN salah!');
+                            onPinFail(res && res.message ? res.message : 'PIN salah! Silakan periksa kembali.');
                         }
                     })
                     .withFailureHandler(function (err) {
@@ -5706,7 +5713,7 @@
                     })
                     .verifyRestrictedPin(pinVal);
             } else {
-                onPinFail('Kode PIN salah. (Default PIN: 1234)');
+                onPinFail('Kode PIN salah. Silakan periksa kembali atau hubungi Administrator.');
             }
         }
 
@@ -6457,7 +6464,7 @@
                     ) +
                     '  </h3>' +
                     (itemM.deskripsi ? '  <p class="public-card-desc">' + escapeHtml(itemM.deskripsi) + '</p>' : '<p class="public-card-desc" style="opacity:0.4; font-style:italic;">Tidak ada deskripsi tambahan.</p>') +
-                    (hasUrl ? '  <div class="public-url-preview">' + escapeHtml(itemM.url) + '</div>' : '') +
+                    (hasUrl ? (isRestricted ? '  <div class="public-url-preview" style="color:var(--accent-orange, #f97316); font-style:italic;"><i class="fa-solid fa-lock" style="font-size:0.75rem;"></i> URL Terproteksi Keamanan</div>' : '  <div class="public-url-preview">' + escapeHtml(itemM.url) + '</div>') : '') +
                     '  <div class="public-card-actions">' +
                     (hasUrl ?
                         (isRestricted ?
@@ -6467,11 +6474,11 @@
                             :
                             '    <a href="' + escapeHtml(itemM.url) + '" target="_blank" rel="noopener noreferrer" class="btn-public-access">' +
                             '      <i class="fa-solid fa-arrow-up-right-from-square"></i> <span>Buka Tautan</span>' +
-                            '    </a>'
-                        ) +
-                        '    <button type="button" class="btn-public-copy" onclick="copyLinkUrl(\'' + mId + '\')" title="Salin URL">' +
-                        '      <i class="fa-regular fa-copy"></i>' +
-                        '    </button>'
+                            '    </a>' +
+                            '    <button type="button" class="btn-public-copy" onclick="copyLinkUrl(\'' + mId + '\')" title="Salin URL">' +
+                            '      <i class="fa-regular fa-copy"></i>' +
+                            '    </button>'
+                        )
                         :
                         '    <button type="button" class="btn-public-folder" onclick="togglePublicSublinks(\'' + mId + '\')">' +
                         '      <i class="fa-solid ' + (isExpanded ? 'fa-folder-open' : 'fa-folder') + '"></i> ' +
@@ -6514,11 +6521,11 @@
                                     :
                                     '    <a href="' + escapeHtml(sItem.url) + '" target="_blank" rel="noopener noreferrer" class="btn-sub-direct">' +
                                     '      <i class="fa-solid fa-arrow-up-right-from-square"></i> Akses' +
-                                    '    </a>'
-                                ) +
-                                '    <button type="button" class="action-icon-btn" style="width:28px; height:28px; font-size:0.75rem;" onclick="copyLinkUrl(\'' + sId + '\')" title="Salin URL">' +
-                                '      <i class="fa-regular fa-copy"></i>' +
-                                '    </button>' : '') +
+                                    '    </a>' +
+                                    '    <button type="button" class="action-icon-btn" style="width:28px; height:28px; font-size:0.75rem;" onclick="copyLinkUrl(\'' + sId + '\')" title="Salin URL">' +
+                                    '      <i class="fa-regular fa-copy"></i>' +
+                                    '    </button>'
+                                ) : '') +
                             '  </div>' +
                             '</div>';
 
@@ -6547,11 +6554,11 @@
                                             :
                                             '    <a href="' + escapeHtml(gItem.url) + '" target="_blank" rel="noopener noreferrer" class="btn-sub-direct" style="background:rgba(192,132,252,0.15); border-color:rgba(192,132,252,0.35); color:#c084fc;">' +
                                             '      <i class="fa-solid fa-arrow-up-right-from-square"></i> Akses' +
-                                            '    </a>'
-                                        ) +
-                                        '    <button type="button" class="action-icon-btn" style="width:28px; height:28px; font-size:0.75rem;" onclick="copyLinkUrl(\'' + gId + '\')" title="Salin URL">' +
-                                        '      <i class="fa-regular fa-copy"></i>' +
-                                        '    </button>' : '') +
+                                            '    </a>' +
+                                            '    <button type="button" class="action-icon-btn" style="width:28px; height:28px; font-size:0.75rem;" onclick="copyLinkUrl(\'' + gId + '\')" title="Salin URL">' +
+                                            '      <i class="fa-regular fa-copy"></i>' +
+                                            '    </button>'
+                                        ) : '') +
                                     '  </div>' +
                                     '</div>';
                             }
