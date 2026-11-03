@@ -1,0 +1,19 @@
+# Temporary / Test files
+*.py
+*.pyc
+__pycache__/
+test_*.html
+test_*.js
+
+# OS metadata
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Logs
+*.log
+
+# Editor & Local Configs
+.vscode/
+.idea/
+
