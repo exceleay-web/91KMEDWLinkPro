@@ -3918,55 +3918,26 @@
         var GAS_EXEC_URL = "https://script.google.com/macros/s/AKfycbyxdawfwRb_tvhWFID-cxYHPSMadJgPFGS1FA6d5plvFhIFnoB8o9YioALrij7lI-FPcow/exec";
 
         function getEffectiveGasUrl() {
-            var url = GAS_EXEC_URL;
             var stored = localStorage.getItem('ZETTLINK_GAS_EXEC_URL');
-            if (stored && stored.indexOf('http') === 0) {
-                url = stored;
-            }
-            return (url && url.indexOf('http') === 0) ? url.trim() : '';
+            if (stored && stored.indexOf('http') === 0) return stored;
+            return GAS_EXEC_URL;
         }
 
-        function promptGasUrlConfig(customMsg) {
-            var currentUrl = getEffectiveGasUrl();
-            var msg = (customMsg ? customMsg + "\n\n" : "") +
-                "Masukkan URL WebApp Google Apps Script Anda (akhiran /exec):\n\n" +
-                "Tips: Salin dari Editor GAS -> Deploy -> Kelola Penerapan -> URL Web App.";
-            var inputUrl = prompt(msg, currentUrl);
-            if (inputUrl && inputUrl.trim().indexOf('http') === 0) {
-                localStorage.setItem('ZETTLINK_GAS_EXEC_URL', inputUrl.trim());
-                showToast("URL Backend diperbarui! Memuat ulang data...", "info");
-                setTimeout(function() { window.location.reload(); }, 1000);
-                return inputUrl.trim();
-            }
-            return currentUrl;
-        }
-
-        function executeVercelFetch(action, payload, onSuccess, onError) {
-            var targetUrl = getEffectiveGasUrl();
-            if (!targetUrl) {
-                targetUrl = promptGasUrlConfig("Konfigurasi Awal Backend Vercel:");
-                if (!targetUrl) {
-                    if (onError) onError(new Error("URL Google Apps Script (/exec) belum disetel."));
-                    return;
-                }
-            }
-
-            // Gunakan Vercel Serverless Function Proxy (/api/gas) jika berjalan di web/Vercel untuk 100% Anti-CORS
-            var useProxy = window.location.protocol.indexOf('http') === 0;
-            var endpoint = useProxy ? '/api/gas' : targetUrl;
-
-            var bodyData = JSON.stringify({
-                action: action,
-                payload: payload,
-                gasUrl: targetUrl
-            });
+        function executeVercelFetch(action, payload, onSuccess, onError, retryCount) {
+            retryCount = retryCount || 0;
+            // Di Vercel, selalu gunakan Serverless Function Proxy /api/gas yang 100% bebas CORS dan memiliki auto-retry
+            var isWeb = window.location.protocol.indexOf('http') === 0;
+            var endpoint = isWeb ? '/api/gas' : GAS_EXEC_URL;
 
             fetch(endpoint, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': useProxy ? 'application/json' : 'text/plain;charset=utf-8'
+                    'Content-Type': isWeb ? 'application/json' : 'text/plain;charset=utf-8'
                 },
-                body: bodyData
+                body: JSON.stringify({
+                    action: action,
+                    payload: payload
+                })
             })
             .then(function (response) {
                 if (!response.ok) {
@@ -3975,27 +3946,32 @@
                 return response.json();
             })
             .then(function (result) {
-                if (result && result.success === false && result.message && result.message.indexOf('404') !== -1) {
-                    throw new Error(result.message);
-                }
                 if (onSuccess) onSuccess(result);
             })
             .catch(function (err) {
-                console.error("Vercel Backend Bridge Error [" + action + "]:", err);
+                console.warn("Vercel Fetch [" + action + "] attempt " + (retryCount + 1) + " failed:", err);
                 
-                // Fallback: Jika pemanggilan awal gagal (misal 404 / typo URL), beri panduan ganti URL
+                // Silent client-side retry hingga 2 kali saat GAS sedang jeda pembaruan versi
+                if (retryCount < 2) {
+                    setTimeout(function () {
+                        executeVercelFetch(action, payload, onSuccess, onError, retryCount + 1);
+                    }, 1200);
+                    return;
+                }
+
+                // Tampilan fallback elegan tanpa meminta input link
                 if (action === 'getDashboardData') {
                     var elNotice = document.getElementById('publicLinksContainer');
                     if (elNotice) {
                         elNotice.innerHTML = 
-                            '<div style="text-align:center; padding:40px 20px; background:var(--bg-card); border:1px dashed var(--cyber-orange); border-radius:12px; margin:20px 0;">' +
-                            '  <i class="fa-solid fa-triangle-exclamation" style="font-size:2rem; color:var(--cyber-orange); margin-bottom:12px; display:inline-block;"></i>' +
-                            '  <h3 style="font-size:1.1rem; color:var(--text-main); margin-bottom:8px;">Koneksi ke Backend Google Apps Script Terkendala</h3>' +
-                            '  <p style="color:var(--text-muted); font-size:0.85rem; max-width:540px; margin:0 auto 16px; line-height:1.5;">' +
-                            '    Pastikan URL deployment Google Apps Script Anda sudah benar dan setelan akses disetel ke <b>"Siapa saja" (Anyone)</b>.' +
+                            '<div style="text-align:center; padding:48px 20px; background:var(--bg-card); border:1px dashed var(--border-tech); border-radius:12px; margin:20px 0;">' +
+                            '  <i class="fa-solid fa-arrows-rotate fa-spin" style="font-size:2rem; color:var(--cyber-orange); margin-bottom:14px; display:inline-block;"></i>' +
+                            '  <h3 style="font-size:1.05rem; color:var(--text-main); margin-bottom:8px;">Menyinkronkan Data Cloud...</h3>' +
+                            '  <p style="color:var(--text-muted); font-size:0.85rem; max-width:480px; margin:0 auto 18px; line-height:1.5;">' +
+                            '    Server Google Apps Script sedang memuat pembaruan data sistem.' +
                             '  </p>' +
-                            '  <button onclick="promptGasUrlConfig()" class="btn btn-primary" style="padding:8px 18px; font-size:0.85rem;">' +
-                            '    <i class="fa-solid fa-gear" style="margin-right:6px;"></i> Perbarui URL Backend (/exec)' +
+                            '  <button onclick="window.location.reload()" class="btn btn-primary" style="padding:8px 22px; font-size:0.85rem;">' +
+                            '    <i class="fa-solid fa-rotate-right" style="margin-right:6px;"></i> Segarkan Halaman' +
                             '  </button>' +
                             '</div>';
                     }
