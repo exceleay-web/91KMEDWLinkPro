@@ -5637,6 +5637,17 @@
                 errBox.textContent = '';
             }
 
+            var btn = document.getElementById('btnSubmitRestrictedPin');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-unlock-keyhole"></i> <span>Buka Tautan</span>';
+                btn.style.background = 'linear-gradient(135deg, #f97316, #ea580c)';
+                btn.style.borderColor = '#f97316';
+            }
+            if (pinInput) {
+                pinInput.disabled = false;
+            }
+
             if (modal) {
                 modal.classList.remove('hidden');
                 setTimeout(function () {
@@ -5663,42 +5674,73 @@
                     errBox.textContent = 'Silakan ketik PIN terlebih dahulu.';
                     errBox.style.display = 'block';
                 }
+                if (pinInput) pinInput.focus();
                 return;
             }
 
-            if (btn) btn.disabled = true;
+            // 1. Indikator Visual Instan 0-Detik (Sistem Sedang Bekerja)
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Memverifikasi PIN...</span>';
+                btn.style.background = 'linear-gradient(135deg, #ea580c, #c2410c)';
+                btn.style.borderColor = '#ea580c';
+            }
+            if (pinInput) pinInput.disabled = true;
+            if (errBox) {
+                errBox.style.display = 'none';
+                errBox.textContent = '';
+            }
 
             function onPinSuccess() {
-                if (btn) btn.disabled = false;
-                var targetUrl = ACTIVE_RESTRICTED_TARGET.url;
-                var targetTitle = ACTIVE_RESTRICTED_TARGET.judul;
-                closeRestrictedPinModal();
-                showToast('PIN Benar! Membuka ' + targetTitle + '...', 'success');
-                if (targetUrl) {
-                    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+                if (btn) {
+                    btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span>Akses Terbuka!</span>';
+                    btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                    btn.style.borderColor = '#10b981';
                 }
+
+                setTimeout(function () {
+                    var targetUrl = ACTIVE_RESTRICTED_TARGET ? ACTIVE_RESTRICTED_TARGET.url : '';
+                    var targetTitle = ACTIVE_RESTRICTED_TARGET ? ACTIVE_RESTRICTED_TARGET.judul : '';
+                    closeRestrictedPinModal();
+                    showToast('PIN Valid! Membuka ' + targetTitle + '...', 'success');
+                    if (targetUrl) {
+                        var win = window.open(targetUrl, '_blank', 'noopener,noreferrer');
+                        if (!win || win.closed || typeof win.closed === 'undefined') {
+                            showToast('Tab baru terhalang popup blocker. Mengalihkan langsung...', 'info');
+                            window.location.href = targetUrl;
+                        }
+                    }
+                }, 380);
             }
 
             function onPinFail(msg) {
-                if (btn) btn.disabled = false;
-                if (errBox) {
-                    errBox.textContent = msg || 'Kode PIN salah. Silakan coba lagi.';
-                    errBox.style.display = 'block';
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-unlock-keyhole"></i> <span>Buka Tautan</span>';
+                    btn.style.background = 'linear-gradient(135deg, #f97316, #ea580c)';
+                    btn.style.borderColor = '#f97316';
                 }
                 if (pinInput) {
+                    pinInput.disabled = false;
                     pinInput.select();
                     pinInput.focus();
                 }
+                if (errBox) {
+                    errBox.textContent = msg || 'Kode PIN salah. Silakan periksa kembali atau hubungi Administrator.';
+                    errBox.style.display = 'block';
+                }
             }
 
-            // 1. Cek instan master PIN lokal (PIN aktif yang disetel Admin)
+            // 2. Cek master PIN lokal (dengan jeda halus 250ms agar animasi loading terbaca manusia)
             var currentMasterPin = APP_STATE.restrictedPin;
             if (currentMasterPin && pinVal === currentMasterPin) {
-                onPinSuccess();
+                setTimeout(function () {
+                    onPinSuccess();
+                }, 250);
                 return;
             }
 
-            // 2. Verifikasi via backend
+            // 3. Verifikasi via backend
             if (typeof google !== 'undefined' && google.script && google.script.run) {
                 google.script.run
                     .withSuccessHandler(function (res) {
@@ -5713,7 +5755,9 @@
                     })
                     .verifyRestrictedPin(pinVal);
             } else {
-                onPinFail('Kode PIN salah. Silakan periksa kembali atau hubungi Administrator.');
+                setTimeout(function () {
+                    onPinFail('Kode PIN salah. Silakan periksa kembali atau hubungi Administrator.');
+                }, 300);
             }
         }
 
