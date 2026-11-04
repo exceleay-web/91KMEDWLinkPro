@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>91KMEDW Link Pro — Manajemen Link</title>
     <!-- Favicon (91KMEDW Signature 4-Bar Icon: Eliminasi Error 404 /favicon.ico) -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='6' width='4.5' height='20' rx='2.25' fill='%23ffffff'/%3E%3Crect x='10.5' y='4' width='4.5' height='24' rx='2.25' fill='%23ff6600'/%3E%3Crect x='18' y='6' width='4.5' height='20' rx='2.25' fill='%23ffffff'/%3E%3Crect x='25.5' y='4' width='4.5' height='24' rx='2.25' fill='%23ff6600'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='6' width='4.5' height='20' rx='2.25' fill='%23ffffff'/%3E%3Crect x='10.5' y='4' width='4.5' height='24' rx='2.25' fill='%23ff6600'/%3E%3Crect x='18' y='6' width='4.5' height='20' rx='2.25' fill='%23ffffff'/%3E%3Crect x='25.5' y='4' width='4.5' height='24' rx='2.25' fill='%23ff6600'/%3E%3C/svg%3E">
     <link rel="shortcut icon" href="favicon.ico">
     <!-- Google Fonts & FontAwesome 6 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2184,6 +2185,7 @@
             0% {
                 transform: translateX(0);
             }
+
             100% {
                 transform: translateX(-50%);
             }
@@ -2195,25 +2197,29 @@
                 margin-bottom: 18px;
                 padding: 3px 10px 3px 4px;
             }
+
             .capsule-track {
                 max-width: 220px;
                 margin: 0 6px 0 6px;
             }
+
             .capsule-tag {
                 padding: 3px 8px;
                 font-size: 0.65rem;
                 gap: 4px;
             }
+
             .capsule-text {
                 font-size: 0.72rem;
                 animation-duration: 18s;
             }
+
             .capsule-separator {
                 padding: 0 8px;
             }
         }
 
-                /* Hero Section */
+        /* Hero Section */
         .landing-hero-section {
             padding: 60px 20px 40px;
             text-align: center;
@@ -2257,6 +2263,27 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-shadow: 0 0 25px rgba(255, 102, 0, 0.4);
+        }
+
+        /* Hero Typewriter Blinking Cursor */
+        .typing-cursor {
+            display: inline-block;
+            color: var(--accent-orange, #ff6600);
+            font-weight: 300;
+            margin-left: 3px;
+            animation: blinkCursor 0.9s infinite;
+            vertical-align: baseline;
+            text-shadow: 0 0 12px rgba(255, 102, 0, 0.6);
+        }
+
+        @keyframes blinkCursor {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        body.theme-light .typing-cursor {
+            color: #ea580c;
+            text-shadow: none;
         }
 
         .landing-hero-desc {
@@ -3235,7 +3262,8 @@
         <section class="landing-hero-section">
             <div class="landing-hero-container">
                 <!-- FLOATING ANNOUNCEMENT CAPSULE HERO (OPSI A) -->
-                <div class="hero-announcement-capsule" id="landingHeroBadge" title="Klik untuk menjelajahi direktori tautan"
+                <div class="hero-announcement-capsule" id="landingHeroBadge"
+                    title="Klik untuk menjelajahi direktori tautan"
                     onclick="document.getElementById('directorySection').scrollIntoView({behavior:'smooth'})">
                     <div class="capsule-tag" id="landingCapsuleTag">
                         <span class="ticker-pulse-dot"></span>
@@ -3250,7 +3278,8 @@
                     <i class="fa-solid fa-arrow-right capsule-arrow"></i>
                 </div>
                 <h1 class="landing-hero-title" id="landingHeroTitle">
-                    Pusat Navigasi &amp; Akses Cepat <br><span class="hero-gradient-text">91KMEDW Link Pro</span>
+                    <span id="landingHeroPrefixText">Pusat Navigasi &amp; Manajemen Link</span><br>
+                    <span class="hero-gradient-text" id="landingHeroHighlightText">91KMEDW Link Pro</span><span class="typing-cursor">|</span>
                 </h1>
                 <p class="landing-hero-desc" id="landingHeroDesc">
                     Temukan seluruh tautan kerja, portal aplikasi, formulir online, dan dokumen operasional tim dalam
@@ -3835,9 +3864,11 @@
                     <!-- RUNNING TEXT TICKER SETTINGS -->
                     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
                         <span style="font-size:0.88rem; font-weight:700; color:#fff;">
-                            <i class="fa-solid fa-bullhorn" style="color:var(--cyber-orange); margin-right:6px;"></i> Teks Berjalan (Live Running Ticker)
+                            <i class="fa-solid fa-bullhorn" style="color:var(--cyber-orange); margin-right:6px;"></i>
+                            Teks Berjalan (Live Running Ticker)
                         </span>
-                        <label class="form-check-label" style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:0.8rem; color:var(--text-secondary);">
+                        <label class="form-check-label"
+                            style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:0.8rem; color:var(--text-secondary);">
                             <input type="checkbox" id="cfgTickerEnabled" class="form-check-input" checked>
                             <span>Aktifkan Ticker</span>
                         </label>
@@ -3846,8 +3877,7 @@
                     <div class="form-row">
                         <div class="form-group col-4">
                             <label class="form-label" for="cfgTickerBadgeText">Label Lencana Kiri</label>
-                            <input type="text" id="cfgTickerBadgeText" class="form-control"
-                                placeholder="PENGUMUMAN">
+                            <input type="text" id="cfgTickerBadgeText" class="form-control" placeholder="PENGUMUMAN">
                         </div>
                         <div class="form-group col-8">
                             <label class="form-label" for="cfgTickerText">Isi Kalimat Teks Berjalan</label>
@@ -3978,34 +4008,45 @@
     <div id="restrictedPinModal" class="modal-backdrop hidden">
         <div class="modal-dialog" style="max-width: 420px; text-align: center;">
             <div class="modal-header" style="justify-content: center; position: relative;">
-                <div class="modal-title" style="color: var(--accent-orange, #f97316); display: flex; align-items: center; gap: 8px;">
+                <div class="modal-title"
+                    style="color: var(--accent-orange, #f97316); display: flex; align-items: center; gap: 8px;">
                     <i class="fa-solid fa-shield-halved"></i>
                     <span id="restrictedPinModalTitle">Akses Terbatas</span>
                 </div>
-                <button type="button" class="action-icon-btn" onclick="closeRestrictedPinModal()" style="position: absolute; right: 0;">
+                <button type="button" class="action-icon-btn" onclick="closeRestrictedPinModal()"
+                    style="position: absolute; right: 0;">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
-            
+
             <div style="padding: 16px 8px 8px;">
-                <div style="width: 58px; height: 58px; border-radius: 50%; background: rgba(249, 115, 22, 0.12); border: 1px solid rgba(249, 115, 22, 0.35); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 1.5rem; color: var(--accent-orange, #f97316); box-shadow: 0 0 20px rgba(249, 115, 22, 0.18);">
+                <div
+                    style="width: 58px; height: 58px; border-radius: 50%; background: rgba(249, 115, 22, 0.12); border: 1px solid rgba(249, 115, 22, 0.35); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 1.5rem; color: var(--accent-orange, #f97316); box-shadow: 0 0 20px rgba(249, 115, 22, 0.18);">
                     <i class="fa-solid fa-lock"></i>
                 </div>
-                <h4 id="restrictedTargetTitle" style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 6px;">Nama Tautan</h4>
+                <h4 id="restrictedTargetTitle"
+                    style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 6px;">Nama Tautan</h4>
                 <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 18px;">
                     Tautan ini diproteksi. Masukkan kode PIN keamanan untuk membuka akses ke halaman tujuan.
                 </p>
 
                 <form id="restrictedPinForm" onsubmit="event.preventDefault(); submitRestrictedPin();">
                     <div class="form-group" style="text-align: left; margin-bottom: 12px;">
-                        <label class="form-label" for="restrictedPinInput" style="text-align: center; display: block;">Masukkan Kode PIN Keamanan</label>
-                        <input type="password" id="restrictedPinInput" class="form-control" placeholder="Ketik Kode PIN Keamanan..." style="text-align: center; font-size: 1.15rem; letter-spacing: 4px; font-weight: 700;" autocomplete="off" required>
+                        <label class="form-label" for="restrictedPinInput"
+                            style="text-align: center; display: block;">Masukkan Kode PIN Keamanan</label>
+                        <input type="password" id="restrictedPinInput" class="form-control"
+                            placeholder="Ketik Kode PIN Keamanan..."
+                            style="text-align: center; font-size: 1.15rem; letter-spacing: 4px; font-weight: 700;"
+                            autocomplete="off" required>
                     </div>
-                    <div id="restrictedPinError" style="display: none; color: var(--danger, #fda4af); font-size: 0.8rem; margin-bottom: 14px; background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.25); padding: 6px 12px; border-radius: 6px;"></div>
-                    
+                    <div id="restrictedPinError"
+                        style="display: none; color: var(--danger, #fda4af); font-size: 0.8rem; margin-bottom: 14px; background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.25); padding: 6px 12px; border-radius: 6px;">
+                    </div>
+
                     <div class="modal-footer" style="justify-content: center; gap: 10px; padding-top: 10px;">
                         <button type="button" class="btn btn-glass" onclick="closeRestrictedPinModal()">Batal</button>
-                        <button type="submit" id="btnSubmitRestrictedPin" class="btn btn-primary" style="background: linear-gradient(135deg, #f97316, #ea580c); border-color: #f97316;">
+                        <button type="submit" id="btnSubmitRestrictedPin" class="btn btn-primary"
+                            style="background: linear-gradient(135deg, #f97316, #ea580c); border-color: #f97316;">
                             <i class="fa-solid fa-unlock-keyhole"></i>
                             <span>Buka Tautan</span>
                         </button>
@@ -4021,7 +4062,8 @@
     <div id="changePinModal" class="modal-backdrop hidden">
         <div class="modal-dialog" style="max-width: 440px;">
             <div class="modal-header">
-                <div class="modal-title" style="color: var(--accent-orange, #f97316); display: flex; align-items: center; gap: 8px;">
+                <div class="modal-title"
+                    style="color: var(--accent-orange, #f97316); display: flex; align-items: center; gap: 8px;">
                     <i class="fa-solid fa-key"></i>
                     <span>Atur PIN Akses Terbatas</span>
                 </div>
@@ -4032,16 +4074,23 @@
 
             <div style="padding: 12px 6px;">
                 <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
-                    Kode PIN ini digunakan untuk melindungi tautan bertanda <strong>[🔒 Akses Terbatas]</strong>. Pengunjung publik wajib memasukkan PIN ini untuk membuka tautan tersebut.
+                    Kode PIN ini digunakan untuk melindungi tautan bertanda <strong>[🔒 Akses Terbatas]</strong>.
+                    Pengunjung publik wajib memasukkan PIN ini untuk membuka tautan tersebut.
                 </p>
 
                 <!-- Current PIN Box -->
-                <div style="background: rgba(255, 255, 255, 0.03); border: 1px dashed var(--border-tech); border-radius: 8px; padding: 12px 14px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between;">
+                <div
+                    style="background: rgba(255, 255, 255, 0.03); border: 1px dashed var(--border-tech); border-radius: 8px; padding: 12px 14px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between;">
                     <div>
-                        <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">PIN Aktif Saat Ini</div>
-                        <div id="currentPinDisplay" style="font-size: 1.15rem; font-weight: 800; color: var(--accent-orange, #f97316); letter-spacing: 3px; font-family: monospace; margin-top: 2px;">••••</div>
+                        <div
+                            style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">
+                            PIN Aktif Saat Ini</div>
+                        <div id="currentPinDisplay"
+                            style="font-size: 1.15rem; font-weight: 800; color: var(--accent-orange, #f97316); letter-spacing: 3px; font-family: monospace; margin-top: 2px;">
+                            ••••</div>
                     </div>
-                    <button type="button" class="action-icon-btn" id="btnToggleCurrentPin" onclick="toggleCurrentPinVisibility()" title="Lihat / Sembunyikan PIN">
+                    <button type="button" class="action-icon-btn" id="btnToggleCurrentPin"
+                        onclick="toggleCurrentPinVisibility()" title="Lihat / Sembunyikan PIN">
                         <i id="iconToggleCurrentPin" class="fa-solid fa-eye"></i>
                     </button>
                 </div>
@@ -4050,23 +4099,34 @@
                     <div class="form-group" style="margin-bottom: 14px;">
                         <label class="form-label" for="inputNewPin">Kode PIN Baru</label>
                         <div style="position: relative;">
-                            <input type="password" id="inputNewPin" class="form-control" placeholder="Masukkan 4-12 karakter..." minlength="4" maxlength="20" required autocomplete="new-password">
-                            <button type="button" class="action-icon-btn" onclick="toggleInputPinVisibility('inputNewPin', 'iconToggleNewPin')" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border: none; background: transparent;" title="Lihat PIN">
-                                <i id="iconToggleNewPin" class="fa-solid fa-eye" style="color: var(--text-muted); font-size: 0.8rem;"></i>
+                            <input type="password" id="inputNewPin" class="form-control"
+                                placeholder="Masukkan 4-12 karakter..." minlength="4" maxlength="20" required
+                                autocomplete="new-password">
+                            <button type="button" class="action-icon-btn"
+                                onclick="toggleInputPinVisibility('inputNewPin', 'iconToggleNewPin')"
+                                style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border: none; background: transparent;"
+                                title="Lihat PIN">
+                                <i id="iconToggleNewPin" class="fa-solid fa-eye"
+                                    style="color: var(--text-muted); font-size: 0.8rem;"></i>
                             </button>
                         </div>
                     </div>
 
                     <div class="form-group" style="margin-bottom: 16px;">
                         <label class="form-label" for="inputConfirmPin">Konfirmasi PIN Baru</label>
-                        <input type="password" id="inputConfirmPin" class="form-control" placeholder="Ketik ulang PIN baru..." minlength="4" maxlength="20" required autocomplete="new-password">
+                        <input type="password" id="inputConfirmPin" class="form-control"
+                            placeholder="Ketik ulang PIN baru..." minlength="4" maxlength="20" required
+                            autocomplete="new-password">
                     </div>
 
-                    <div id="changePinAlert" style="display: none; font-size: 0.8rem; padding: 8px 12px; border-radius: 6px; margin-bottom: 14px;"></div>
+                    <div id="changePinAlert"
+                        style="display: none; font-size: 0.8rem; padding: 8px 12px; border-radius: 6px; margin-bottom: 14px;">
+                    </div>
 
                     <div class="modal-footer" style="padding-top: 8px;">
                         <button type="button" class="btn btn-glass" onclick="closeChangePinModal()">Batal</button>
-                        <button type="submit" id="btnSaveNewPin" class="btn btn-primary" style="background: linear-gradient(135deg, #f97316, #ea580c); border-color: #f97316;">
+                        <button type="submit" id="btnSaveNewPin" class="btn btn-primary"
+                            style="background: linear-gradient(135deg, #f97316, #ea580c); border-color: #f97316;">
                             <i class="fa-solid fa-floppy-disk"></i>
                             <span>Simpan PIN Baru</span>
                         </button>
@@ -4108,47 +4168,47 @@
                     payload: payload
                 })
             })
-            .then(function (response) {
-                return response.json().then(function (data) {
-                    if (!response.ok || (data && data.success === false)) {
-                        throw new Error((data && data.message) ? data.message : ("HTTP Status: " + response.status));
-                    }
-                    return data;
-                });
-            })
-            .then(function (result) {
-                if (onSuccess) onSuccess(result);
-            })
-            .catch(function (err) {
-                console.warn("Vercel Fetch [" + action + "] attempt " + (retryCount + 1) + " failed:", err);
-                
-                // Silent client-side retry hingga 2 kali saat GAS sedang jeda pembaruan versi
-                if (retryCount < 2) {
-                    setTimeout(function () {
-                        executeVercelFetch(action, payload, onSuccess, onError, retryCount + 1);
-                    }, 1200);
-                    return;
-                }
+                .then(function (response) {
+                    return response.json().then(function (data) {
+                        if (!response.ok || (data && data.success === false)) {
+                            throw new Error((data && data.message) ? data.message : ("HTTP Status: " + response.status));
+                        }
+                        return data;
+                    });
+                })
+                .then(function (result) {
+                    if (onSuccess) onSuccess(result);
+                })
+                .catch(function (err) {
+                    console.warn("Vercel Fetch [" + action + "] attempt " + (retryCount + 1) + " failed:", err);
 
-                // Tampilan fallback elegan tanpa meminta input link
-                if (action === 'getDashboardData') {
-                    var elNotice = document.getElementById('publicLinksContainer');
-                    if (elNotice) {
-                        elNotice.innerHTML = 
-                            '<div style="text-align:center; padding:48px 20px; background:var(--bg-card); border:1px dashed var(--border-tech); border-radius:12px; margin:20px 0;">' +
-                            '  <i class="fa-solid fa-arrows-rotate fa-spin" style="font-size:2rem; color:var(--cyber-orange); margin-bottom:14px; display:inline-block;"></i>' +
-                            '  <h3 style="font-size:1.05rem; color:var(--text-main); margin-bottom:8px;">Menyinkronkan Data Cloud...</h3>' +
-                            '  <p style="color:var(--text-muted); font-size:0.85rem; max-width:480px; margin:0 auto 18px; line-height:1.5;">' +
-                            '    Server Google Apps Script sedang memuat pembaruan data sistem.' +
-                            '  </p>' +
-                            '  <button onclick="window.location.reload()" class="btn btn-primary" style="padding:8px 22px; font-size:0.85rem;">' +
-                            '    <i class="fa-solid fa-rotate-right" style="margin-right:6px;"></i> Segarkan Halaman' +
-                            '  </button>' +
-                            '</div>';
+                    // Silent client-side retry hingga 2 kali saat GAS sedang jeda pembaruan versi
+                    if (retryCount < 2) {
+                        setTimeout(function () {
+                            executeVercelFetch(action, payload, onSuccess, onError, retryCount + 1);
+                        }, 1200);
+                        return;
                     }
-                }
-                if (onError) onError(err);
-            });
+
+                    // Tampilan fallback elegan tanpa meminta input link
+                    if (action === 'getDashboardData') {
+                        var elNotice = document.getElementById('publicLinksContainer');
+                        if (elNotice) {
+                            elNotice.innerHTML =
+                                '<div style="text-align:center; padding:48px 20px; background:var(--bg-card); border:1px dashed var(--border-tech); border-radius:12px; margin:20px 0;">' +
+                                '  <i class="fa-solid fa-arrows-rotate fa-spin" style="font-size:2rem; color:var(--cyber-orange); margin-bottom:14px; display:inline-block;"></i>' +
+                                '  <h3 style="font-size:1.05rem; color:var(--text-main); margin-bottom:8px;">Menyinkronkan Data Cloud...</h3>' +
+                                '  <p style="color:var(--text-muted); font-size:0.85rem; max-width:480px; margin:0 auto 18px; line-height:1.5;">' +
+                                '    Server Google Apps Script sedang memuat pembaruan data sistem.' +
+                                '  </p>' +
+                                '  <button onclick="window.location.reload()" class="btn btn-primary" style="padding:8px 22px; font-size:0.85rem;">' +
+                                '    <i class="fa-solid fa-rotate-right" style="margin-right:6px;"></i> Segarkan Halaman' +
+                                '  </button>' +
+                                '</div>';
+                        }
+                    }
+                    if (onError) onError(err);
+                });
         }
 
         // Jika dibuka di luar Google Apps Script (Vercel / GitHub Pages / Localhost):
@@ -4457,6 +4517,94 @@
         }
 
 
+
+        /**
+         * ==========================================================================
+         * TYPING TEXT EFFECT (TYPEWRITER ENGINE) - OPSI A ROTASI DINAMIS
+         * ==========================================================================
+         */
+        var HERO_TYPING_STATE = {
+            words: [
+                '91KMEDW Link Pro',
+                'Portal Akses Cepat & Terpadu',
+                'Direktori Kerja & Aplikasi Tim',
+                'Satu Pintu Manajemen Dokumen'
+            ],
+            wordIndex: 0,
+            charIndex: 0,
+            isDeleting: false,
+            timer: null,
+            targetEl: null
+        };
+
+        function updateHeroTypingWords(primaryWord) {
+            if (primaryWord && String(primaryWord).trim()) {
+                HERO_TYPING_STATE.words[0] = String(primaryWord).trim();
+            }
+        }
+
+        function initHeroTypingEffect() {
+            var target = document.getElementById('landingHeroHighlightText');
+            if (!target) return;
+
+            HERO_TYPING_STATE.targetEl = target;
+
+            if (HERO_TYPING_STATE.timer) {
+                clearTimeout(HERO_TYPING_STATE.timer);
+                HERO_TYPING_STATE.timer = null;
+            }
+
+            // Inisialisasi awal sinkron dengan konfigurasi CMS
+            if (typeof getEffectiveLandingConfig === 'function') {
+                var cfg = getEffectiveLandingConfig();
+                if (cfg && cfg.heroTitleHighlight) {
+                    updateHeroTypingWords(cfg.heroTitleHighlight);
+                }
+            }
+
+            HERO_TYPING_STATE.wordIndex = 0;
+            HERO_TYPING_STATE.charIndex = HERO_TYPING_STATE.words[0].length;
+            HERO_TYPING_STATE.isDeleting = false;
+            target.textContent = HERO_TYPING_STATE.words[0];
+
+            // Tunggu 2 detik setelah buka halaman sebelum mulai menghapus kata pertama
+            HERO_TYPING_STATE.timer = setTimeout(function () {
+                HERO_TYPING_STATE.isDeleting = true;
+                runHeroTypingTick();
+            }, 2200);
+        }
+
+        function runHeroTypingTick() {
+            var state = HERO_TYPING_STATE;
+            if (!state.targetEl) return;
+
+            var words = state.words;
+            var currentWord = words[state.wordIndex % words.length];
+
+            if (state.isDeleting) {
+                state.charIndex--;
+                state.targetEl.textContent = currentWord.substring(0, state.charIndex);
+            } else {
+                state.charIndex++;
+                state.targetEl.textContent = currentWord.substring(0, state.charIndex);
+            }
+
+            var nextSpeed = state.isDeleting ? 45 : 85;
+
+            if (!state.isDeleting && state.charIndex === currentWord.length) {
+                // Selesai mengetik satu kata penuh: jeda baca yang nyaman
+                nextSpeed = 2200;
+                state.isDeleting = true;
+            } else if (state.isDeleting && state.charIndex === 0) {
+                // Selesai menghapus mundur: berpindah ke kata berikutnya
+                state.isDeleting = false;
+                state.wordIndex++;
+                nextSpeed = 420;
+            }
+
+            state.timer = setTimeout(runHeroTypingTick, nextSpeed);
+        }
+
         window.addEventListener('DOMContentLoaded', function () {
             initTheme();
             initColorAndIconPickers();
@@ -4489,6 +4637,7 @@
                 }
             }
             applyLandingConfigToDOM();
+            initHeroTypingEffect();
 
             // Default: Selalu tampilkan Landing Page Publik
             showLandingView();
@@ -4995,9 +5144,9 @@
                     '          <i class="fa-solid fa-thumbtack"></i>' +
                     '        </button>' +
                     '        <button type="button" class="action-icon-btn ' + (isRestricted ? 'active-lock' : '') + '" onclick="handleToggleRestricted(\'' + mId + '\')" title="' + (isRestricted ? 'Akses Terbatas Aktif (Wajib PIN) - Klik untuk Buka Kunci' : 'Kunci Akses (Wajib PIN)') + '">' +
-'          <i class="fa-solid ' + (isRestricted ? 'fa-lock' : 'fa-lock-open') + '" style="color:' + (isRestricted ? 'var(--cyber-orange, #f97316)' : 'var(--text-muted)') + ';"></i>' +
-'        </button>' +
-'        <button type="button" class="action-icon-btn ' + (isHidden ? 'active-hide' : '') + '" onclick="handleToggleHide(\'' + mId + '\')" title="' + (isHidden ? 'Tampilkan ke Publik (Unhide)' : 'Sembunyikan dari Publik (Hide)') + '">' +
+                    '          <i class="fa-solid ' + (isRestricted ? 'fa-lock' : 'fa-lock-open') + '" style="color:' + (isRestricted ? 'var(--cyber-orange, #f97316)' : 'var(--text-muted)') + ';"></i>' +
+                    '        </button>' +
+                    '        <button type="button" class="action-icon-btn ' + (isHidden ? 'active-hide' : '') + '" onclick="handleToggleHide(\'' + mId + '\')" title="' + (isHidden ? 'Tampilkan ke Publik (Unhide)' : 'Sembunyikan dari Publik (Hide)') + '">' +
                     '          <i class="fa-solid ' + (isHidden ? 'fa-eye-slash' : 'fa-eye') + '" style="color:' + (isHidden ? 'var(--text-muted)' : 'var(--neon-green)') + ';"></i>' +
                     '        </button>' +
                     '        <button type="button" class="action-icon-btn" onclick="openEditLinkById(\'' + mId + '\')" title="Edit Main Link">' +
@@ -5051,7 +5200,7 @@
                                 '          <div class="node-meta-row">' +
                                 '            <span class="level-badge level-2-badge"><i class="fa-solid fa-gear"></i> Process Node</span>' +
                                 (isSubRestricted ? '            <span class="count-pill" style="color:var(--accent-orange, #f97316); border-color:rgba(249,115,22,0.3); background:rgba(249,115,22,0.1);"><i class="fa-solid fa-lock"></i> Terbatas</span>' : '') +
-(isSubHidden ? '            <span class="count-pill" style="color:var(--text-muted); border-color:rgba(255,255,255,0.12);"><i class="fa-solid fa-eye-slash"></i> Hidden</span>' : '') +
+                                (isSubHidden ? '            <span class="count-pill" style="color:var(--text-muted); border-color:rgba(255,255,255,0.12);"><i class="fa-solid fa-eye-slash"></i> Hidden</span>' : '') +
                                 '            <span class="count-pill">' + childSubSubs.length + ' Endpoints</span>' +
                                 '          </div>' +
                                 '          <a href="' + escapeHtml(sLink.url) + '" target="_blank" rel="noopener noreferrer" class="link-title-anchor" style="font-size:0.95rem;">' +
@@ -5077,9 +5226,9 @@
                                 '          <i class="fa-regular fa-copy"></i>' +
                                 '        </button>' +
                                 '        <button type="button" class="action-icon-btn ' + (isSubRestricted ? 'active-lock' : '') + '" onclick="handleToggleRestricted(\'' + sId + '\')" title="' + (isSubRestricted ? 'Akses Terbatas Aktif (Wajib PIN) - Klik untuk Buka Kunci' : 'Kunci Akses (Wajib PIN)') + '">' +
-'          <i class="fa-solid ' + (isSubRestricted ? 'fa-lock' : 'fa-lock-open') + '" style="color:' + (isSubRestricted ? 'var(--cyber-orange, #f97316)' : 'var(--text-muted)') + ';"></i>' +
-'        </button>' +
-'        <button type="button" class="action-icon-btn ' + (isSubHidden ? 'active-hide' : '') + '" onclick="handleToggleHide(\'' + sId + '\')" title="' + (isSubHidden ? 'Tampilkan ke Publik (Unhide)' : 'Sembunyikan dari Publik (Hide)') + '">' +
+                                '          <i class="fa-solid ' + (isSubRestricted ? 'fa-lock' : 'fa-lock-open') + '" style="color:' + (isSubRestricted ? 'var(--cyber-orange, #f97316)' : 'var(--text-muted)') + ';"></i>' +
+                                '        </button>' +
+                                '        <button type="button" class="action-icon-btn ' + (isSubHidden ? 'active-hide' : '') + '" onclick="handleToggleHide(\'' + sId + '\')" title="' + (isSubHidden ? 'Tampilkan ke Publik (Unhide)' : 'Sembunyikan dari Publik (Hide)') + '">' +
                                 '          <i class="fa-solid ' + (isSubHidden ? 'fa-eye-slash' : 'fa-eye') + '" style="color:' + (isSubHidden ? 'var(--text-muted)' : 'var(--neon-green)') + ';"></i>' +
                                 '        </button>' +
                                 '        <button type="button" class="action-icon-btn" onclick="openEditLinkById(\'' + sId + '\')" title="Edit Sub Link">' +
@@ -5118,7 +5267,7 @@
                                         '          <div class="node-meta-row">' +
                                         '            <span class="level-badge level-3-badge"><i class="fa-solid fa-circle-nodes"></i> Endpoint</span>' +
                                         (isGrandRestricted ? '            <span class="count-pill" style="color:var(--accent-orange, #f97316); border-color:rgba(249,115,22,0.3); background:rgba(249,115,22,0.1);"><i class="fa-solid fa-lock"></i> Terbatas</span>' : '') +
-(isGrandHidden ? '            <span class="count-pill" style="color:var(--text-muted); border-color:rgba(255,255,255,0.12);"><i class="fa-solid fa-eye-slash"></i> Hidden</span>' : '') +
+                                        (isGrandHidden ? '            <span class="count-pill" style="color:var(--text-muted); border-color:rgba(255,255,255,0.12);"><i class="fa-solid fa-eye-slash"></i> Hidden</span>' : '') +
                                         '            <div class="status-indicator-badge">' +
                                         '              <span class="status-pulse-dot"></span>' +
                                         '              <span>' + eStatus + '</span>' +
@@ -5147,9 +5296,9 @@
                                         '          <i class="fa-regular fa-copy"></i>' +
                                         '        </button>' +
                                         '        <button type="button" class="action-icon-btn ' + (isGrandRestricted ? 'active-lock' : '') + '" onclick="handleToggleRestricted(\'' + gId + '\')" title="' + (isGrandRestricted ? 'Akses Terbatas Aktif (Wajib PIN) - Klik untuk Buka Kunci' : 'Kunci Akses (Wajib PIN)') + '">' +
-'          <i class="fa-solid ' + (isGrandRestricted ? 'fa-lock' : 'fa-lock-open') + '" style="color:' + (isGrandRestricted ? 'var(--cyber-orange, #f97316)' : 'var(--text-muted)') + ';"></i>' +
-'        </button>' +
-'        <button type="button" class="action-icon-btn ' + (isGrandHidden ? 'active-hide' : '') + '" onclick="handleToggleHide(\'' + gId + '\')" title="' + (isGrandHidden ? 'Tampilkan ke Publik (Unhide)' : 'Sembunyikan dari Publik (Hide)') + '">' +
+                                        '          <i class="fa-solid ' + (isGrandRestricted ? 'fa-lock' : 'fa-lock-open') + '" style="color:' + (isGrandRestricted ? 'var(--cyber-orange, #f97316)' : 'var(--text-muted)') + ';"></i>' +
+                                        '        </button>' +
+                                        '        <button type="button" class="action-icon-btn ' + (isGrandHidden ? 'active-hide' : '') + '" onclick="handleToggleHide(\'' + gId + '\')" title="' + (isGrandHidden ? 'Tampilkan ke Publik (Unhide)' : 'Sembunyikan dari Publik (Hide)') + '">' +
                                         '          <i class="fa-solid ' + (isGrandHidden ? 'fa-eye-slash' : 'fa-eye') + '" style="color:' + (isGrandHidden ? 'var(--text-muted)' : 'var(--neon-green)') + ';"></i>' +
                                         '        </button>' +
                                         '        <button type="button" class="action-icon-btn" onclick="openEditLinkById(\'' + gId + '\')" title="Edit Sub-Sub Link">' +
@@ -6550,7 +6699,7 @@
                             '  <div class="public-sublink-left">' +
                             '    <i class="fa-solid fa-code-branch" style="color:var(--accent-cyan); font-size:0.8rem; flex-shrink:0;"></i>' +
                             '    <div style="flex:1; min-width:0; overflow:hidden;">' +
-                            '      <div class="public-sublink-title">' + escapeHtml(sItem.judul) + 
+                            '      <div class="public-sublink-title">' + escapeHtml(sItem.judul) +
                             (isSRestricted ? ' <span style="font-size:0.68rem; font-weight:600; padding:1px 6px; border-radius:4px; background:rgba(249,115,22,0.15); color:#fdba74; border:1px solid rgba(249,115,22,0.3); vertical-align:middle; margin-left:4px;"><i class="fa-solid fa-lock" style="font-size:0.6rem;"></i> Terbatas</span>' : '') +
                             '      </div>' +
                             (sItem.deskripsi ? '      <div style="font-size:0.72rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(sItem.deskripsi) + '</div>' : '') +
@@ -6584,7 +6733,7 @@
                                     '  <div class="public-sublink-left">' +
                                     '    <i class="fa-solid fa-circle-nodes" style="color:var(--accent-purple); font-size:0.75rem; flex-shrink:0;"></i>' +
                                     '    <div style="flex:1; min-width:0; overflow:hidden;">' +
-                                    '      <div class="public-sublink-title" style="font-size:0.82rem;">' + escapeHtml(gItem.judul) + 
+                                    '      <div class="public-sublink-title" style="font-size:0.82rem;">' + escapeHtml(gItem.judul) +
                                     (isGRestricted ? ' <span style="font-size:0.65rem; font-weight:600; padding:1px 5px; border-radius:4px; background:rgba(249,115,22,0.15); color:#fdba74; border:1px solid rgba(249,115,22,0.3); vertical-align:middle; margin-left:4px;"><i class="fa-solid fa-lock" style="font-size:0.58rem;"></i> Terbatas</span>' : '') +
                                     '      </div>' +
                                     '    </div>' +
@@ -6631,7 +6780,7 @@
 
             tickerEnabled: true,
             tickerBadgeText: "INFO SISTEM",
-            tickerText: "● SISTEM: Seluruh tautan beroperasi normal (Operational 100%) • Akses dokumen & aplikasi resmi", 
+            tickerText: "● SISTEM: Seluruh tautan beroperasi normal (Operational 100%) • Akses dokumen & aplikasi resmi",
 
             heroBadgeText: "Direktori Resmi • Akses Terpusat 91KMEDW",
             heroBadgeIcon: "fa-shield-halved",
@@ -6726,8 +6875,16 @@
             }
             var heroTitle = document.getElementById('landingHeroTitle');
             if (heroTitle) {
-                heroTitle.innerHTML = escapeHtml(cfg.heroTitlePrefix || 'Pusat Navigasi & Akses Cepat') +
-                    ' <br><span class="hero-gradient-text">' + escapeHtml(cfg.heroTitleHighlight || '91KMEDW Link Pro') + '</span>';
+                var prefixEl = document.getElementById('landingHeroPrefixText');
+                if (prefixEl) {
+                    prefixEl.textContent = cfg.heroTitlePrefix || 'Pusat Navigasi & Manajemen Link';
+                } else {
+                    heroTitle.innerHTML = '<span id="landingHeroPrefixText">' + escapeHtml(cfg.heroTitlePrefix || 'Pusat Navigasi & Manajemen Link') + '</span><br>' +
+                        '<span class="hero-gradient-text" id="landingHeroHighlightText">' + escapeHtml(cfg.heroTitleHighlight || '91KMEDW Link Pro') + '</span><span class="typing-cursor">|</span>';
+                }
+                if (typeof updateHeroTypingWords === 'function') {
+                    updateHeroTypingWords(cfg.heroTitleHighlight || '91KMEDW Link Pro');
+                }
             }
             var heroDesc = document.getElementById('landingHeroDesc');
             if (heroDesc) {
