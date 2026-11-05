@@ -3915,6 +3915,32 @@
                         </div>
                     </div>
 
+                    <!-- TYPEWRITER / TYPING TEXT EFFECT SETTINGS -->
+                    <div style="background:rgba(255,102,0,0.05); border:1px solid rgba(255,102,0,0.22); border-radius:8px; padding:12px; margin-bottom:14px;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                            <span style="font-size:0.85rem; font-weight:700; color:var(--cyber-orange);">
+                                <i class="fa-solid fa-keyboard" style="margin-right:6px;"></i>
+                                Efek Mengetik Otomatis (Typing Text Effect)
+                            </span>
+                            <label class="form-check-label"
+                                style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:0.8rem; color:var(--text-secondary);">
+                                <input type="checkbox" id="cfgTypingEnabled" class="form-check-input" checked>
+                                <span>Aktifkan Efek Mengetik</span>
+                            </label>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label" for="cfgTypingWords" style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">
+                                Daftar Kalimat Bergantian (Satu Kalimat Per Baris)
+                            </label>
+                            <textarea id="cfgTypingWords" class="form-control" rows="4" style="font-family:monospace; font-size:0.82rem; line-height:1.4;"
+                                placeholder="91KMEDW Link Pro&#10;Portal Akses Cepat &amp; Terpadu&#10;Direktori Kerja &amp; Aplikasi Tim&#10;Satu Pintu Manajemen Dokumen"></textarea>
+                            <div style="font-size:0.73rem; color:var(--text-secondary); margin-top:4px;">
+                                <i class="fa-solid fa-circle-info" style="margin-right:4px;"></i>
+                                Kalimat di atas akan diketik dan dihapus secara bergantian pada Judul Baris 2. Jika dinonaktifkan, teks &quot;Judul Utama Hero (Baris 2)&quot; di atas akan tampil statis tanpa kursor.
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <label class="form-label" for="cfgHeroDescription">Paragraf Deskripsi Pengantar</label>
                         <textarea id="cfgHeroDescription" class="form-control" rows="3"
@@ -4537,6 +4563,60 @@
             targetEl: null
         };
 
+        function syncHeroTypingConfig(cfg) {
+            var target = document.getElementById('landingHeroHighlightText');
+            var cursor = document.querySelector('.typing-cursor');
+            if (!target) return;
+
+            HERO_TYPING_STATE.targetEl = target;
+
+            // Jika admin menonaktifkan efek mengetik di CMS:
+            if (cfg && cfg.typingEnabled === false) {
+                if (HERO_TYPING_STATE.timer) {
+                    clearTimeout(HERO_TYPING_STATE.timer);
+                    HERO_TYPING_STATE.timer = null;
+                }
+                if (cursor) cursor.style.display = 'none';
+                target.textContent = (cfg && cfg.heroTitleHighlight) ? cfg.heroTitleHighlight : '91KMEDW Link Pro';
+                return;
+            }
+
+            // Jika efek mengetik aktif:
+            if (cursor) cursor.style.display = 'inline-block';
+
+            var wordsList = [];
+            if (cfg && Array.isArray(cfg.typingWords) && cfg.typingWords.length > 0) {
+                wordsList = cfg.typingWords.filter(function (w) { return typeof w === 'string' && w.trim().length > 0; });
+            } else if (cfg && typeof cfg.typingWords === 'string' && cfg.typingWords.trim().length > 0) {
+                wordsList = cfg.typingWords.split('\n').map(function (w) { return w.trim(); }).filter(Boolean);
+            }
+
+            if (wordsList.length === 0) {
+                wordsList = [
+                    (cfg && cfg.heroTitleHighlight && cfg.heroTitleHighlight.trim()) ? cfg.heroTitleHighlight.trim() : '91KMEDW Link Pro',
+                    'Portal Akses Cepat & Terpadu',
+                    'Direktori Kerja & Aplikasi Tim',
+                    'Satu Pintu Manajemen Dokumen'
+                ];
+            }
+
+            HERO_TYPING_STATE.words = wordsList;
+
+            // Jalankan siklus jika timer belum aktif
+            if (!HERO_TYPING_STATE.timer) {
+                HERO_TYPING_STATE.wordIndex = 0;
+                var initialWord = HERO_TYPING_STATE.words[0] || '91KMEDW Link Pro';
+                HERO_TYPING_STATE.charIndex = initialWord.length;
+                HERO_TYPING_STATE.isDeleting = false;
+                target.textContent = initialWord;
+
+                HERO_TYPING_STATE.timer = setTimeout(function () {
+                    HERO_TYPING_STATE.isDeleting = true;
+                    runHeroTypingTick();
+                }, 2200);
+            }
+        }
+
         function updateHeroTypingWords(primaryWord) {
             if (primaryWord && String(primaryWord).trim()) {
                 HERO_TYPING_STATE.words[0] = String(primaryWord).trim();
@@ -4544,34 +4624,12 @@
         }
 
         function initHeroTypingEffect() {
-            var target = document.getElementById('landingHeroHighlightText');
-            if (!target) return;
-
-            HERO_TYPING_STATE.targetEl = target;
-
+            var cfg = (typeof getEffectiveLandingConfig === 'function') ? getEffectiveLandingConfig() : null;
             if (HERO_TYPING_STATE.timer) {
                 clearTimeout(HERO_TYPING_STATE.timer);
                 HERO_TYPING_STATE.timer = null;
             }
-
-            // Inisialisasi awal sinkron dengan konfigurasi CMS
-            if (typeof getEffectiveLandingConfig === 'function') {
-                var cfg = getEffectiveLandingConfig();
-                if (cfg && cfg.heroTitleHighlight) {
-                    updateHeroTypingWords(cfg.heroTitleHighlight);
-                }
-            }
-
-            HERO_TYPING_STATE.wordIndex = 0;
-            HERO_TYPING_STATE.charIndex = HERO_TYPING_STATE.words[0].length;
-            HERO_TYPING_STATE.isDeleting = false;
-            target.textContent = HERO_TYPING_STATE.words[0];
-
-            // Tunggu 2 detik setelah buka halaman sebelum mulai menghapus kata pertama
-            HERO_TYPING_STATE.timer = setTimeout(function () {
-                HERO_TYPING_STATE.isDeleting = true;
-                runHeroTypingTick();
-            }, 2200);
+            syncHeroTypingConfig(cfg);
         }
 
         function runHeroTypingTick() {
@@ -4579,6 +4637,7 @@
             if (!state.targetEl) return;
 
             var words = state.words;
+            if (!words || words.length === 0) return;
             var currentWord = words[state.wordIndex % words.length];
 
             if (state.isDeleting) {
@@ -6789,6 +6848,14 @@
             heroDescription: "Temukan seluruh tautan kerja, portal aplikasi, formulir online, dan dokumen operasional tim dalam satu antarmuka yang cepat, aman, dan mudah digunakan.",
             heroSearchPlaceholder: "Cari judul link, aplikasi, dokumen, atau kata kunci...",
 
+            typingEnabled: true,
+            typingWords: [
+                '91KMEDW Link Pro',
+                'Portal Akses Cepat & Terpadu',
+                'Direktori Kerja & Aplikasi Tim',
+                'Satu Pintu Manajemen Dokumen'
+            ],
+
             directoryTitle: "Direktori Tautan Publik",
             directorySubtitle: "Klik langsung untuk membuka tautan, atau gunakan filter kategori di bawah ini.",
 
@@ -6882,9 +6949,7 @@
                     heroTitle.innerHTML = '<span id="landingHeroPrefixText">' + escapeHtml(cfg.heroTitlePrefix || 'Pusat Navigasi & Manajemen Link') + '</span><br>' +
                         '<span class="hero-gradient-text" id="landingHeroHighlightText">' + escapeHtml(cfg.heroTitleHighlight || '91KMEDW Link Pro') + '</span><span class="typing-cursor">|</span>';
                 }
-                if (typeof updateHeroTypingWords === 'function') {
-                    updateHeroTypingWords(cfg.heroTitleHighlight || '91KMEDW Link Pro');
-                }
+                syncHeroTypingConfig(cfg);
             }
             var heroDesc = document.getElementById('landingHeroDesc');
             if (heroDesc) {
@@ -6948,6 +7013,26 @@
             var elHeroSearch = document.getElementById('cfgHeroSearchPlaceholder');
             if (elHeroSearch) elHeroSearch.value = cfg.heroSearchPlaceholder || '';
 
+            // Typewriter / Typing Text Effect
+            var elTypingEnabled = document.getElementById('cfgTypingEnabled');
+            if (elTypingEnabled) elTypingEnabled.checked = (cfg.typingEnabled !== false);
+            var elTypingWords = document.getElementById('cfgTypingWords');
+            if (elTypingWords) {
+                var wordsList = cfg.typingWords;
+                if (Array.isArray(wordsList)) {
+                    elTypingWords.value = wordsList.join('\n');
+                } else if (typeof wordsList === 'string') {
+                    elTypingWords.value = wordsList;
+                } else {
+                    elTypingWords.value = [
+                        cfg.heroTitleHighlight || '91KMEDW Link Pro',
+                        'Portal Akses Cepat & Terpadu',
+                        'Direktori Kerja & Aplikasi Tim',
+                        'Satu Pintu Manajemen Dokumen'
+                    ].join('\n');
+                }
+            }
+
             // Populate Tab 2 (Direktori & Footer)
             var elDirTitle = document.getElementById('cfgDirectoryTitle');
             if (elDirTitle) elDirTitle.value = cfg.directoryTitle || '';
@@ -6993,6 +7078,13 @@
         function submitLandingSettingsForm() {
             var elBrandMain = document.getElementById('cfgBrandTitleMain');
 
+            var typingWordsVal = document.getElementById('cfgTypingWords') ? document.getElementById('cfgTypingWords').value : '';
+            var typingWordsArr = typingWordsVal.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+            if (typingWordsArr.length === 0) {
+                var hiText = (document.getElementById('cfgHeroTitleHighlight') ? document.getElementById('cfgHeroTitleHighlight').value : '').trim() || '91KMEDW Link Pro';
+                typingWordsArr = [hiText];
+            }
+
             var payload = {
                 brandTitleMain: (elBrandMain ? elBrandMain.value : '').trim() || '91KMEDW',
                 brandTitleHighlight: (document.getElementById('cfgBrandTitleHighlight') ? document.getElementById('cfgBrandTitleHighlight').value : '').trim(),
@@ -7009,6 +7101,10 @@
                 heroTitleHighlight: (document.getElementById('cfgHeroTitleHighlight') ? document.getElementById('cfgHeroTitleHighlight').value : '').trim(),
                 heroDescription: (document.getElementById('cfgHeroDescription') ? document.getElementById('cfgHeroDescription').value : '').trim(),
                 heroSearchPlaceholder: (document.getElementById('cfgHeroSearchPlaceholder') ? document.getElementById('cfgHeroSearchPlaceholder').value : '').trim(),
+
+                // Typing Text Effect
+                typingEnabled: document.getElementById('cfgTypingEnabled') ? document.getElementById('cfgTypingEnabled').checked : true,
+                typingWords: typingWordsArr,
 
                 directoryTitle: (document.getElementById('cfgDirectoryTitle') ? document.getElementById('cfgDirectoryTitle').value : '').trim(),
                 directorySubtitle: (document.getElementById('cfgDirectorySubtitle') ? document.getElementById('cfgDirectorySubtitle').value : '').trim(),
