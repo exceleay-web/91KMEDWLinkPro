@@ -3467,6 +3467,12 @@
                         <span class="nav-item-title">Atur PIN Akses</span>
                     </div>
                 </div>
+                <div class="nav-item" onclick="openAdminAccountModal()" title="Ganti Password & Kelola Akun Admin">
+                    <div class="nav-item-left">
+                        <i class="fa-solid fa-user-shield" style="color: var(--accent-cyan, #06b6d4);"></i>
+                        <span class="nav-item-title">Akun & Password</span>
+                    </div>
+                </div>
             </div>
 
             <div class="sidebar-section-header">
@@ -3491,6 +3497,10 @@
                     </div>
                 </div>
                 <div style="display:flex; align-items:center; gap:6px;">
+                    <button type="button" class="action-icon-btn" onclick="openAdminAccountModal()"
+                        title="Ganti Password & Akun Admin">
+                        <i class="fa-solid fa-user-gear" style="color: var(--accent-cyan, #06b6d4);"></i>
+                    </button>
                     <button type="button" class="action-icon-btn" onclick="toggleAppTheme()"
                         title="Ganti Mode Terang / Gelap">
                         <i id="sidebarThemeIcon" class="fa-solid fa-sun" style="color: var(--accent-orange);"></i>
@@ -3526,6 +3536,11 @@
                         title="Atur Kunci PIN Akses Terbatas">
                         <i class="fa-solid fa-key" style="color: var(--accent-orange, #f97316);"></i>
                         <span>Atur PIN Akses</span>
+                    </button>
+                    <button type="button" class="btn btn-glass" onclick="openAdminAccountModal()"
+                        title="Ganti Password & Kelola Akun Admin">
+                        <i class="fa-solid fa-user-shield" style="color: var(--accent-cyan, #06b6d4);"></i>
+                        <span>Akun Admin</span>
                     </button>
                     <button type="button" id="btnThemeToggle" class="btn btn-glass" onclick="toggleAppTheme()"
                         title="Ganti Mode Terang / Gelap">
@@ -4175,6 +4190,114 @@
         </div>
     </div>
 
+    <!-- ========================================================================
+       7. MODAL GANTI PASSWORD & AKUN ADMIN (SUPABASE AUTH)
+       ======================================================================== -->
+    <div id="adminAccountModal" class="modal-backdrop hidden">
+        <div class="modal-dialog" style="max-width: 460px;">
+            <div class="modal-header">
+                <div class="modal-title"
+                    style="color: var(--accent-cyan, #06b6d4); display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>Kelola Akun & Password Admin</span>
+                </div>
+                <button type="button" class="action-icon-btn" onclick="closeAdminAccountModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div style="padding: 12px 6px;">
+                <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
+                    Perbarui kredensial akun administrator Anda. Seluruh perubahan diverifikasi dan dienkripsi langsung oleh mesin keamanan Supabase Auth.
+                </p>
+
+                <form id="adminAccountForm" onsubmit="event.preventDefault(); submitAdminAccountForm();">
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        <label class="form-label" for="inputAdminEmail">Akun Email Supabase</label>
+                        <div class="input-box">
+                            <input type="text" id="inputAdminEmail" class="form-control with-icon"
+                                value="exceleay@gmail.com" readonly style="opacity: 0.8; cursor: not-allowed; background: rgba(255,255,255,0.03);"
+                                title="Akun resmi Supabase Auth">
+                            <i class="fa-solid fa-envelope input-icon"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        <label class="form-label" for="inputAdminDisplayName">Nama Tampilan Admin</label>
+                        <div class="input-box">
+                            <input type="text" id="inputAdminDisplayName" class="form-control with-icon"
+                                placeholder="Nama admin..." maxlength="50" autocomplete="name">
+                            <i class="fa-solid fa-id-badge input-icon"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        <label class="form-label" for="inputOldAdminPassword">Password Saat Ini (Wajib Verifikasi)</label>
+                        <div style="position: relative;">
+                            <input type="password" id="inputOldAdminPassword" class="form-control with-right-btn"
+                                placeholder="Masukkan password saat ini..." required autocomplete="current-password">
+                            <button type="button" class="action-icon-btn"
+                                onclick="toggleInputPinVisibility('inputOldAdminPassword', 'iconToggleOldPass')"
+                                style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border: none; background: transparent;"
+                                title="Lihat Password">
+                                <i id="iconToggleOldPass" class="fa-solid fa-eye"
+                                    style="color: var(--text-muted); font-size: 0.8rem;"></i>
+                            </button>
+                        </div>
+                        <span style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; display: block;">
+                            Wajib dimasukkan untuk membuktikan Anda adalah pemilik akun sah.
+                        </span>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        <label class="form-label" for="inputNewAdminPassword">Password Baru</label>
+                        <div style="position: relative;">
+                            <input type="password" id="inputNewAdminPassword" class="form-control with-right-btn"
+                                placeholder="Minimal 6 karakter..." minlength="6" maxlength="50" required
+                                autocomplete="new-password">
+                            <button type="button" class="action-icon-btn"
+                                onclick="toggleInputPinVisibility('inputNewAdminPassword', 'iconToggleNewPass')"
+                                style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border: none; background: transparent;"
+                                title="Lihat Password">
+                                <i id="iconToggleNewPass" class="fa-solid fa-eye"
+                                    style="color: var(--text-muted); font-size: 0.8rem;"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label class="form-label" for="inputConfirmAdminPassword">Konfirmasi Password Baru</label>
+                        <div style="position: relative;">
+                            <input type="password" id="inputConfirmAdminPassword" class="form-control with-right-btn"
+                                placeholder="Ketik ulang password baru..." minlength="6" maxlength="50" required
+                                autocomplete="new-password">
+                            <button type="button" class="action-icon-btn"
+                                onclick="toggleInputPinVisibility('inputConfirmAdminPassword', 'iconToggleConfirmPass')"
+                                style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border: none; background: transparent;"
+                                title="Lihat Password">
+                                <i id="iconToggleConfirmPass" class="fa-solid fa-eye"
+                                    style="color: var(--text-muted); font-size: 0.8rem;"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="adminAccountAlert"
+                        style="display: none; font-size: 0.8rem; padding: 8px 12px; border-radius: 6px; margin-bottom: 14px;">
+                    </div>
+
+                    <div class="modal-footer" style="padding-top: 8px;">
+                        <button type="button" class="btn btn-glass" onclick="closeAdminAccountModal()">Batal</button>
+                        <button type="submit" id="btnSaveAdminAccount" class="btn btn-primary"
+                            style="background: linear-gradient(135deg, #06b6d4, #0284c7); border-color: #06b6d4;">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <span>Simpan Perubahan Akun</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         /**
          * ==========================================================================
@@ -4610,6 +4733,80 @@
                     return;
                 }
 
+                if (action === 'updateAdminAccount') {
+                    var oldPass = String(payload && payload.oldPassword ? payload.oldPassword : '').trim();
+                    var newPass = String(payload && payload.newPassword ? payload.newPassword : '').trim();
+                    var newDisplayName = String(payload && payload.displayName ? payload.displayName : '').trim();
+                    var email = String(payload && payload.email ? payload.email : 'exceleay@gmail.com').trim() || 'exceleay@gmail.com';
+
+                    // 1. Verifikasi ketat password saat ini via Supabase Auth
+                    fetch(SUPABASE_CONFIG.url + '/auth/v1/token?grant_type=password', {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_CONFIG.key,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            password: oldPass
+                        })
+                    })
+                    .then(function (tokenRes) {
+                        return tokenRes.json().then(function (tokenData) {
+                            if (!tokenRes.ok) {
+                                var errText = 'Password saat ini salah! Verifikasi keamanan ditolak.';
+                                if (tokenData && tokenData.msg && tokenData.msg !== 'Invalid login credentials') {
+                                    errText = tokenData.msg;
+                                }
+                                throw new Error(errText);
+                            }
+
+                            var validToken = tokenData.access_token;
+                            if (!validToken) {
+                                throw new Error('Otorisasi sesi dari Supabase gagal diperoleh.');
+                            }
+
+                            localStorage.setItem('ZETTLINK_SUPABASE_TOKEN', validToken);
+
+                            // 2. Simpan password baru terenkripsi Bcrypt ke Supabase Auth
+                            var updateBody = { password: newPass };
+                            if (newDisplayName) {
+                                updateBody.data = { display_name: newDisplayName };
+                            }
+
+                            return fetch(SUPABASE_CONFIG.url + '/auth/v1/user', {
+                                method: 'PUT',
+                                headers: {
+                                    'apikey': SUPABASE_CONFIG.key,
+                                    'Authorization': 'Bearer ' + validToken,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(updateBody)
+                            });
+                        });
+                    })
+                    .then(function (putRes) {
+                        return putRes.json().then(function (userData) {
+                            if (!putRes.ok) {
+                                var errMsg = (userData && (userData.msg || userData.message || userData.error_description)) || 'Gagal menyimpan password baru di Supabase.';
+                                throw new Error(errMsg);
+                            }
+                            if (onSuccess) {
+                                onSuccess({
+                                    success: true,
+                                    message: 'Kredensial Admin berhasil diperbarui dengan aman di Supabase!',
+                                    user: userData
+                                });
+                            }
+                        });
+                    })
+                    .catch(function (err) {
+                        console.error('updateAdminAccount error:', err);
+                        if (onError) onError(err);
+                    });
+                    return;
+                }
+
                 console.warn('Unhandled Supabase action:', action);
                 if (onSuccess) onSuccess({ success: true, message: 'Action executed' });
             } catch (err) {
@@ -4650,7 +4847,8 @@
                 'deleteCategory',
                 'deleteCategoryById',
                 'saveLandingConfig',
-                'getLandingConfig'
+                'getLandingConfig',
+                'updateAdminAccount'
             ];
 
             methodNames.forEach(function (method) {
@@ -4917,6 +5115,145 @@
                 if (btn) btn.disabled = false;
                 closeChangePinModal();
                 showToast('PIN Akses Terbatas berhasil diubah menjadi: ' + newPin, 'success');
+            }
+        }
+
+        /**
+         * ==========================================================================
+         * PENGATURAN AKUN & GANTI PASSWORD ADMIN (SUPABASE AUTH)
+         * ==========================================================================
+         */
+        function openAdminAccountModal() {
+            var modal = document.getElementById('adminAccountModal');
+            var inputOld = document.getElementById('inputOldAdminPassword');
+            var inputNew = document.getElementById('inputNewAdminPassword');
+            var inputConfirm = document.getElementById('inputConfirmAdminPassword');
+            var inputName = document.getElementById('inputAdminDisplayName');
+            var inputEmail = document.getElementById('inputAdminEmail');
+            var alertBox = document.getElementById('adminAccountAlert');
+
+            if (inputOld) inputOld.value = '';
+            if (inputNew) inputNew.value = '';
+            if (inputConfirm) inputConfirm.value = '';
+            if (alertBox) {
+                alertBox.style.display = 'none';
+                alertBox.textContent = '';
+            }
+
+            if (inputEmail) {
+                inputEmail.value = 'exceleay@gmail.com';
+            }
+
+            if (inputName) {
+                var curName = (APP_STATE.user && APP_STATE.user.namaLengkap) ? APP_STATE.user.namaLengkap : 'Admin';
+                inputName.value = curName;
+            }
+
+            if (modal) modal.classList.remove('hidden');
+            if (inputOld) setTimeout(function () { inputOld.focus(); }, 120);
+        }
+
+        function closeAdminAccountModal() {
+            var modal = document.getElementById('adminAccountModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function submitAdminAccountForm() {
+            var inputOld = document.getElementById('inputOldAdminPassword');
+            var inputNew = document.getElementById('inputNewAdminPassword');
+            var inputConfirm = document.getElementById('inputConfirmAdminPassword');
+            var inputName = document.getElementById('inputAdminDisplayName');
+            var inputEmail = document.getElementById('inputAdminEmail');
+            var alertBox = document.getElementById('adminAccountAlert');
+            var btn = document.getElementById('btnSaveAdminAccount');
+
+            function showAlert(msg, isError) {
+                if (!alertBox) return;
+                alertBox.style.display = 'block';
+                alertBox.style.background = isError ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)';
+                alertBox.style.border = isError ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(16, 185, 129, 0.4)';
+                alertBox.style.color = isError ? '#fca5a5' : '#86efac';
+                alertBox.textContent = msg;
+            }
+
+            var oldPass = inputOld ? inputOld.value.trim() : '';
+            var newPass = inputNew ? inputNew.value.trim() : '';
+            var confirmPass = inputConfirm ? inputConfirm.value.trim() : '';
+            var displayName = inputName ? inputName.value.trim() : 'Admin';
+            var email = inputEmail ? inputEmail.value.trim() : 'exceleay@gmail.com';
+
+            if (!oldPass) {
+                showAlert('Harap masukkan password saat ini untuk verifikasi keamanan.', true);
+                if (inputOld) inputOld.focus();
+                return;
+            }
+
+            if (!newPass) {
+                showAlert('Harap tentukan password baru.', true);
+                if (inputNew) inputNew.focus();
+                return;
+            }
+
+            if (newPass.length < 6) {
+                showAlert('Password baru minimal 6 karakter demi keamanan akun.', true);
+                if (inputNew) inputNew.focus();
+                return;
+            }
+
+            if (newPass === oldPass) {
+                showAlert('Password baru tidak boleh sama dengan password saat ini.', true);
+                if (inputNew) inputNew.focus();
+                return;
+            }
+
+            if (newPass !== confirmPass) {
+                showAlert('Konfirmasi password baru tidak cocok. Periksa kembali.', true);
+                if (inputConfirm) inputConfirm.focus();
+                return;
+            }
+
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Menyimpan ke Supabase...</span>';
+            }
+
+            var payload = {
+                email: email,
+                oldPassword: oldPass,
+                newPassword: newPass,
+                displayName: displayName
+            };
+
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run
+                    .withSuccessHandler(function (res) {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="fa-solid fa-shield-halved"></i> <span>Simpan Perubahan Akun</span>';
+                        }
+                        if (res && res.success) {
+                            if (displayName && APP_STATE.user) {
+                                APP_STATE.user.namaLengkap = displayName;
+                                localStorage.setItem('ZETTLINK_USER_SESSION', JSON.stringify(APP_STATE.user));
+                                var nameEl = document.getElementById('userDisplayName');
+                                if (nameEl) nameEl.textContent = displayName;
+                                var avatarEl = document.getElementById('userAvatarInitial');
+                                if (avatarEl) avatarEl.textContent = displayName.charAt(0).toUpperCase();
+                            }
+                            closeAdminAccountModal();
+                            showToast('Password Admin berhasil diperbarui dengan aman!', 'success');
+                        } else {
+                            showAlert((res && res.message) ? res.message : 'Gagal memperbarui akun.', true);
+                        }
+                    })
+                    .withFailureHandler(function (err) {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="fa-solid fa-shield-halved"></i> <span>Simpan Perubahan Akun</span>';
+                        }
+                        showAlert(err.message || 'Gagal memperbarui kredensial.', true);
+                    })
+                    .updateAdminAccount(payload);
             }
         }
 
