@@ -3376,19 +3376,19 @@
 
             <form id="adminLoginForm" onsubmit="event.preventDefault(); handleLoginSubmit();">
                 <div class="form-group">
-                    <label class="form-label" for="loginUsername">Username Admin</label>
+                    <label class="form-label" for="loginUsername">Username / Email Admin</label>
                     <div class="input-box">
                         <input type="text" id="loginUsername" class="form-control with-icon"
-                            placeholder="Masukkan username..." required autocomplete="username">
+                            placeholder="admin atau email Supabase..." required autocomplete="username">
                         <i class="fa-solid fa-user input-icon"></i>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="loginPassword">Password Admin</label>
+                    <label class="form-label" for="loginPassword">Password Admin Supabase</label>
                     <div class="input-box">
                         <input type="password" id="loginPassword" class="form-control with-icon with-right-btn"
-                            placeholder="Masukkan password..." required autocomplete="current-password">
+                            placeholder="Masukkan password akun Supabase..." required autocomplete="current-password">
                         <i class="fa-solid fa-lock input-icon"></i>
                         <button type="button" class="input-action-btn" onclick="togglePasswordVisibility()"
                             title="Tampilkan Password">
@@ -4191,13 +4191,26 @@
         function supabaseFetch(path, options) {
             options = options || {};
             var headers = options.headers || {};
+            var token = localStorage.getItem('ZETTLINK_SUPABASE_TOKEN');
             headers['apikey'] = SUPABASE_CONFIG.key;
-            headers['Authorization'] = 'Bearer ' + SUPABASE_CONFIG.key;
+            if (token) {
+                headers['Authorization'] = 'Bearer ' + token;
+            } else {
+                headers['Authorization'] = 'Bearer ' + SUPABASE_CONFIG.key;
+            }
             if (!headers['Content-Type'] && options.method && options.method !== 'GET') {
                 headers['Content-Type'] = 'application/json';
             }
             options.headers = headers;
-            return fetch(SUPABASE_CONFIG.url + '/rest/v1/' + path, options);
+            return fetch(SUPABASE_CONFIG.url + '/rest/v1/' + path, options).then(function (res) {
+                if (!res.ok) {
+                    return res.json().catch(function () { return { message: res.statusText }; }).then(function (errData) {
+                        var msg = (errData && (errData.message || errData.msg || errData.hint || errData.details)) || ('HTTP Error ' + res.status);
+                        throw new Error(msg);
+                    });
+                }
+                return res;
+            });
         }
 
         function executeSupabaseOperation(action, payload, onSuccess, onError) {
@@ -4290,32 +4303,57 @@
                     var uName = String(payload && payload.username ? payload.username : '').trim();
                     var uPass = String(payload && payload.password ? payload.password : '').trim();
 
-                    supabaseFetch('users?username=eq.' + encodeURIComponent(uName) + '&status_aktif=eq.Aktif&select=*')
-                        .then(function (r) { return r.json(); })
-                        .then(function (users) {
-                            if (!users || users.length === 0) {
-                                if (onSuccess) onSuccess({ success: false, message: 'Username tidak ditemukan atau akun nonaktif.' });
+                    // Otomatis petakan username 'admin' ke email resmi Supabase Auth
+                    var emailToAuth = uName;
+                    if (uName.indexOf('@') === -1) {
+                        emailToAuth = 'exceleay@gmail.com';
+                    }
+
+                    fetch(SUPABASE_CONFIG.url + '/auth/v1/token?grant_type=password', {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_CONFIG.key,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email: emailToAuth,
+                            password: uPass
+                        })
+                    })
+                    .then(function (res) {
+                        return res.json().then(function (data) {
+                            if (!res.ok) {
+                                var errMsg = data.msg || data.error_description || data.message || 'Login gagal.';
+                                if (data.error_code === 'invalid_credentials' || errMsg === 'Invalid login credentials') {
+                                    errMsg = 'Username atau Password salah. Gunakan username "admin" (atau email resmi) dan password akun Supabase Anda.';
+                                }
+                                if (onSuccess) onSuccess({ success: false, message: errMsg });
                                 return;
                             }
-                            var u = users[0];
-                            if (u.password_hash === uPass || u.password_hash === 'admin123' || u.password_hash === 'admin321') {
-                                if (onSuccess) onSuccess({
-                                    success: true,
-                                    message: 'Login berhasil. Selamat datang, ' + u.nama_lengkap + '!',
-                                    user: {
-                                        id: u.id,
-                                        username: u.username,
-                                        nama: u.nama_lengkap,
-                                        role: u.role || 'Admin'
-                                    }
-                                });
-                            } else {
-                                if (onSuccess) onSuccess({ success: false, message: 'Password salah. Periksa kembali password Anda.' });
+
+                            // Simpan JWT Bearer Token Supabase
+                            if (data.access_token) {
+                                localStorage.setItem('ZETTLINK_SUPABASE_TOKEN', data.access_token);
                             }
-                        })
-                        .catch(function (err) {
-                            if (onError) onError(err);
+
+                            var userProfile = {
+                                id: (data.user && data.user.id) ? data.user.id : 'USR-ADMIN',
+                                username: uName,
+                                namaLengkap: 'Admin',
+                                role: 'Admin'
+                            };
+
+                            if (onSuccess) onSuccess({
+                                success: true,
+                                message: 'Login berhasil! Sesi Admin telah diotentikasi resmi oleh Supabase.',
+                                user: userProfile
+                            });
                         });
+                    })
+                    .catch(function (err) {
+                        console.error('Supabase Auth error:', err);
+                        if (onError) onError(err);
+                    });
                     return;
                 }
 
@@ -5014,7 +5052,8 @@
             APP_STATE.expandedNodes['LNK-20261102-0007'] = true;
 
             var savedSession = localStorage.getItem('ZETTLINK_USER_SESSION');
-            if (savedSession) {
+            var savedToken = localStorage.getItem('ZETTLINK_SUPABASE_TOKEN');
+            if (savedSession && savedToken) {
                 try {
                     APP_STATE.user = JSON.parse(savedSession);
                     if (APP_STATE.user && (APP_STATE.user.namaLengkap === 'Super Admin Zettbos' || APP_STATE.user.namaLengkap === 'Super Admin ZettBoss')) {
@@ -5023,7 +5062,12 @@
                     }
                 } catch (e) {
                     localStorage.removeItem('ZETTLINK_USER_SESSION');
+                    localStorage.removeItem('ZETTLINK_SUPABASE_TOKEN');
                 }
+            } else {
+                localStorage.removeItem('ZETTLINK_USER_SESSION');
+                localStorage.removeItem('ZETTLINK_SUPABASE_TOKEN');
+                APP_STATE.user = null;
             }
 
             // Muat konfigurasi kustom landing page dari cache lokal (Zero Latency)
@@ -5168,6 +5212,7 @@
 
         function handleLogout() {
             localStorage.removeItem('ZETTLINK_USER_SESSION');
+            localStorage.removeItem('ZETTLINK_SUPABASE_TOKEN');
             APP_STATE.user = null;
             var passEl = document.getElementById('loginPassword');
             if (passEl) passEl.value = '';
@@ -6740,7 +6785,8 @@
 
         function triggerAdminAccess() {
             var savedSession = localStorage.getItem('ZETTLINK_USER_SESSION');
-            if (savedSession) {
+            var savedToken = localStorage.getItem('ZETTLINK_SUPABASE_TOKEN');
+            if (savedSession && savedToken) {
                 try {
                     APP_STATE.user = JSON.parse(savedSession);
                     showToast('Sesi Admin Aktif. Membuka Dashboard Manajemen...', 'success');
@@ -6748,7 +6794,11 @@
                     return;
                 } catch (e) {
                     localStorage.removeItem('ZETTLINK_USER_SESSION');
+                    localStorage.removeItem('ZETTLINK_SUPABASE_TOKEN');
                 }
+            } else {
+                localStorage.removeItem('ZETTLINK_USER_SESSION');
+                localStorage.removeItem('ZETTLINK_SUPABASE_TOKEN');
             }
             openAdminLoginModal();
         }
