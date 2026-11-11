@@ -3376,19 +3376,19 @@
 
             <form id="adminLoginForm" onsubmit="event.preventDefault(); handleLoginSubmit();">
                 <div class="form-group">
-                    <label class="form-label" for="loginUsername">Username / Email Admin</label>
+                    <label class="form-label" for="loginUsername">Username Admin</label>
                     <div class="input-box">
                         <input type="text" id="loginUsername" class="form-control with-icon"
-                            placeholder="admin atau email Supabase..." required autocomplete="username">
+                            placeholder="Masukkan username..." required autocomplete="username">
                         <i class="fa-solid fa-user input-icon"></i>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="loginPassword">Password Admin Supabase</label>
+                    <label class="form-label" for="loginPassword">Password Admin</label>
                     <div class="input-box">
                         <input type="password" id="loginPassword" class="form-control with-icon with-right-btn"
-                            placeholder="Masukkan password akun Supabase..." required autocomplete="current-password">
+                            placeholder="Masukkan password..." required autocomplete="current-password">
                         <i class="fa-solid fa-lock input-icon"></i>
                         <button type="button" class="input-action-btn" onclick="togglePasswordVisibility()"
                             title="Tampilkan Password">
@@ -4446,11 +4446,7 @@
                     .then(function (res) {
                         return res.json().then(function (data) {
                             if (!res.ok) {
-                                var errMsg = data.msg || data.error_description || data.message || 'Login gagal.';
-                                if (data.error_code === 'invalid_credentials' || errMsg === 'Invalid login credentials') {
-                                    errMsg = 'Username atau Password salah. Gunakan username "admin" (atau email resmi) dan password akun Supabase Anda.';
-                                }
-                                if (onSuccess) onSuccess({ success: false, message: errMsg });
+                                if (onSuccess) onSuccess({ success: false, message: 'Username dan Password Salah' });
                                 return;
                             }
 
@@ -4475,7 +4471,7 @@
                     })
                     .catch(function (err) {
                         console.error('Supabase Auth error:', err);
-                        if (onError) onError(err);
+                        if (onSuccess) onSuccess({ success: false, message: 'Username dan Password Salah' });
                     });
                     return;
                 }
@@ -5490,7 +5486,7 @@
             var btn = document.getElementById('btnLoginSubmit');
 
             if (!usernameVal || !passwordVal) {
-                showToast('Harap isi Username dan Password terlebih dahulu.', 'error');
+                showToast('Username dan Password Salah', 'error');
                 return;
             }
 
@@ -5510,13 +5506,13 @@
                             showToast(res.message, 'success');
                             enterDashboardMode();
                         } else {
-                            showToast(res ? res.message : 'Gagal login.', 'error');
+                            showToast('Username dan Password Salah', 'error');
                         }
                     })
                     .withFailureHandler(function (err) {
                         btn.disabled = false;
                         btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> <span>Masuk ke Dashboard</span>';
-                        showToast('Error Server: ' + err.message, 'error');
+                        showToast('Username dan Password Salah', 'error');
                     })
                     .loginUser(payload);
             } else {
@@ -5537,7 +5533,7 @@
                         showToast('Login berhasil (Mode Preview Canvas)!', 'success');
                         enterDashboardMode();
                     } else {
-                        showToast('Username atau Password salah. Gunakan admin / admin123.', 'error');
+                        showToast('Username dan Password Salah', 'error');
                     }
                 }, 350);
             }
