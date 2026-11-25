@@ -4208,7 +4208,8 @@
 
             <div style="padding: 12px 6px;">
                 <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
-                    Perbarui kata sandi akun Admin Anda. Password baru akan langsung dienkripsi dan disimpan dengan aman.
+                    Perbarui kata sandi akun Admin Anda. Password baru akan langsung dienkripsi dan disimpan dengan
+                    aman.
                 </p>
 
                 <form id="adminAccountForm" onsubmit="event.preventDefault(); submitAdminAccountForm();">
@@ -4394,6 +4395,14 @@
                                     totalEndpoints: countLv3
                                 }
                             };
+
+                            // Simpan cache lokal untuk ketahanan offline / jika database dijeda (Paused)
+                            try {
+                                localStorage.setItem('ZETTLINK_CACHED_CATEGORIES', JSON.stringify(categories));
+                                localStorage.setItem('ZETTLINK_CACHED_LINKS', JSON.stringify(allLinks));
+                                if (restrictedPin) localStorage.setItem('ZETTLINK_CACHED_PIN', restrictedPin);
+                            } catch (e) { }
+
                             if (onSuccess) onSuccess(response);
                         })
                         .catch(function (err) {
@@ -4424,36 +4433,36 @@
                             password: uPass
                         })
                     })
-                    .then(function (res) {
-                        return res.json().then(function (data) {
-                            if (!res.ok) {
-                                if (onSuccess) onSuccess({ success: false, message: 'Username dan Password Salah' });
-                                return;
-                            }
+                        .then(function (res) {
+                            return res.json().then(function (data) {
+                                if (!res.ok) {
+                                    if (onSuccess) onSuccess({ success: false, message: 'Username dan Password Salah' });
+                                    return;
+                                }
 
-                            // Simpan JWT Bearer Token Supabase
-                            if (data.access_token) {
-                                localStorage.setItem('ZETTLINK_SUPABASE_TOKEN', data.access_token);
-                            }
+                                // Simpan JWT Bearer Token Supabase
+                                if (data.access_token) {
+                                    localStorage.setItem('ZETTLINK_SUPABASE_TOKEN', data.access_token);
+                                }
 
-                            var userProfile = {
-                                id: (data.user && data.user.id) ? data.user.id : 'USR-ADMIN',
-                                username: uName,
-                                namaLengkap: 'Admin',
-                                role: 'Admin'
-                            };
+                                var userProfile = {
+                                    id: (data.user && data.user.id) ? data.user.id : 'USR-ADMIN',
+                                    username: uName,
+                                    namaLengkap: 'Admin',
+                                    role: 'Admin'
+                                };
 
-                            if (onSuccess) onSuccess({
-                                success: true,
-                                message: 'Login berhasil! Sesi Admin telah diotentikasi resmi oleh Supabase.',
-                                user: userProfile
+                                if (onSuccess) onSuccess({
+                                    success: true,
+                                    message: 'Login berhasil! Sesi Admin telah diotentikasi resmi oleh Supabase.',
+                                    user: userProfile
+                                });
                             });
+                        })
+                        .catch(function (err) {
+                            console.error('Supabase Auth error:', err);
+                            if (onSuccess) onSuccess({ success: false, message: 'Username dan Password Salah' });
                         });
-                    })
-                    .catch(function (err) {
-                        console.error('Supabase Auth error:', err);
-                        if (onSuccess) onSuccess({ success: false, message: 'Username dan Password Salah' });
-                    });
                     return;
                 }
 
@@ -4728,59 +4737,59 @@
                             password: oldPass
                         })
                     })
-                    .then(function (tokenRes) {
-                        return tokenRes.json().then(function (tokenData) {
-                            if (!tokenRes.ok) {
-                                var errText = 'Password saat ini salah! Verifikasi keamanan ditolak.';
-                                if (tokenData && tokenData.msg && tokenData.msg !== 'Invalid login credentials') {
-                                    errText = tokenData.msg;
+                        .then(function (tokenRes) {
+                            return tokenRes.json().then(function (tokenData) {
+                                if (!tokenRes.ok) {
+                                    var errText = 'Password saat ini salah! Verifikasi keamanan ditolak.';
+                                    if (tokenData && tokenData.msg && tokenData.msg !== 'Invalid login credentials') {
+                                        errText = tokenData.msg;
+                                    }
+                                    throw new Error(errText);
                                 }
-                                throw new Error(errText);
-                            }
 
-                            var validToken = tokenData.access_token;
-                            if (!validToken) {
-                                throw new Error('Otorisasi sesi dari Supabase gagal diperoleh.');
-                            }
+                                var validToken = tokenData.access_token;
+                                if (!validToken) {
+                                    throw new Error('Otorisasi sesi dari Supabase gagal diperoleh.');
+                                }
 
-                            localStorage.setItem('ZETTLINK_SUPABASE_TOKEN', validToken);
+                                localStorage.setItem('ZETTLINK_SUPABASE_TOKEN', validToken);
 
-                            // 2. Simpan password baru terenkripsi Bcrypt ke Supabase Auth
-                            var updateBody = { password: newPass };
-                            if (newDisplayName) {
-                                updateBody.data = { display_name: newDisplayName };
-                            }
+                                // 2. Simpan password baru terenkripsi Bcrypt ke Supabase Auth
+                                var updateBody = { password: newPass };
+                                if (newDisplayName) {
+                                    updateBody.data = { display_name: newDisplayName };
+                                }
 
-                            return fetch(SUPABASE_CONFIG.url + '/auth/v1/user', {
-                                method: 'PUT',
-                                headers: {
-                                    'apikey': SUPABASE_CONFIG.key,
-                                    'Authorization': 'Bearer ' + validToken,
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify(updateBody)
-                            });
-                        });
-                    })
-                    .then(function (putRes) {
-                        return putRes.json().then(function (userData) {
-                            if (!putRes.ok) {
-                                var errMsg = (userData && (userData.msg || userData.message || userData.error_description)) || 'Gagal menyimpan password baru di Supabase.';
-                                throw new Error(errMsg);
-                            }
-                            if (onSuccess) {
-                                onSuccess({
-                                    success: true,
-                                    message: 'Kredensial Admin berhasil diperbarui dengan aman di Supabase!',
-                                    user: userData
+                                return fetch(SUPABASE_CONFIG.url + '/auth/v1/user', {
+                                    method: 'PUT',
+                                    headers: {
+                                        'apikey': SUPABASE_CONFIG.key,
+                                        'Authorization': 'Bearer ' + validToken,
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify(updateBody)
                                 });
-                            }
+                            });
+                        })
+                        .then(function (putRes) {
+                            return putRes.json().then(function (userData) {
+                                if (!putRes.ok) {
+                                    var errMsg = (userData && (userData.msg || userData.message || userData.error_description)) || 'Gagal menyimpan password baru di Supabase.';
+                                    throw new Error(errMsg);
+                                }
+                                if (onSuccess) {
+                                    onSuccess({
+                                        success: true,
+                                        message: 'Kredensial Admin berhasil diperbarui dengan aman di Supabase!',
+                                        user: userData
+                                    });
+                                }
+                            });
+                        })
+                        .catch(function (err) {
+                            console.error('updateAdminAccount error:', err);
+                            if (onError) onError(err);
                         });
-                    })
-                    .catch(function (err) {
-                        console.error('updateAdminAccount error:', err);
-                        if (onError) onError(err);
-                    });
                     return;
                 }
 
@@ -5369,6 +5378,19 @@
                     localStorage.removeItem('ZETTLINK_LANDING_CONFIG');
                 }
             }
+
+            // Muat data kategori & link dari cache lokal (Ketahanan Offline & Proteksi saat Supabase Paused)
+            var cachedCats = localStorage.getItem('ZETTLINK_CACHED_CATEGORIES');
+            var cachedLnks = localStorage.getItem('ZETTLINK_CACHED_LINKS');
+            var cachedPin = localStorage.getItem('ZETTLINK_CACHED_PIN');
+            if (cachedCats && cachedLnks) {
+                try {
+                    APP_STATE.categories = JSON.parse(cachedCats);
+                    APP_STATE.links = JSON.parse(cachedLnks);
+                    if (cachedPin) APP_STATE.restrictedPin = String(cachedPin).trim();
+                } catch (e) { }
+            }
+
             applyLandingConfigToDOM();
             initHeroTypingEffect();
 
@@ -5397,10 +5419,11 @@
             var stack = document.getElementById('toastStack');
             var item = document.createElement('div');
             var isErr = (type === 'error');
-            item.className = 'toast-item' + (isErr ? ' error' : '');
+            var isWarn = (type === 'warning');
+            item.className = 'toast-item' + (isErr ? ' error' : (isWarn ? ' warning' : ''));
 
-            var iconClass = isErr ? 'fa-circle-exclamation' : 'fa-circle-check';
-            var iconColor = isErr ? '#f43f5e' : '#00ffaa';
+            var iconClass = isErr ? 'fa-circle-exclamation' : (isWarn ? 'fa-triangle-exclamation' : 'fa-circle-check');
+            var iconColor = isErr ? '#f43f5e' : (isWarn ? '#f59e0b' : '#00ffaa');
 
             item.innerHTML =
                 '<i class="fa-solid ' + iconClass + '" style="color:' + iconColor + '; font-size:1.1rem;"></i>' +
@@ -5411,7 +5434,7 @@
                 if (item && item.parentNode) {
                     item.parentNode.removeChild(item);
                 }
-            }, 3600);
+            }, isWarn ? 5500 : 3600);
         }
 
         /**
@@ -5562,7 +5585,14 @@
                         }
                     })
                     .withFailureHandler(function (err) {
-                        showToast('Gagal mengambil data: ' + err.message, 'error');
+                        var hasData = (APP_STATE.links && APP_STATE.links.length > 0);
+                        if (hasData) {
+                            renderAllComponents();
+                            renderLandingComponents();
+                            showToast('Menampilkan data cache. Server database Supabase sedang dijeda (Paused) atau dalam pemulihan.', 'warning');
+                        } else {
+                            showToast('Koneksi ke database terputus. Proyek Supabase kemungkinan sedang Dijeda (Paused). Silakan buka Dashboard Supabase dan klik Restore.', 'error');
+                        }
                     })
                     .getDashboardData(params);
             } else {
