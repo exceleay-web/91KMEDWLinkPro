@@ -4321,10 +4321,14 @@
         function executeSupabaseOperation(action, payload, onSuccess, onError) {
             try {
                 if (action === 'getDashboardData') {
+                    var hasAdminToken = Boolean(localStorage.getItem('ZETTLINK_SUPABASE_TOKEN'));
+                    var settingsEndpoint = hasAdminToken
+                        ? 'app_settings?select=*'
+                        : 'app_settings?key=eq.LANDING_PAGE_CONFIG&select=key,value';
                     Promise.all([
                         supabaseFetch('categories?select=*&order=urutan.asc,id.asc').then(function (r) { return r.json(); }),
                         supabaseFetch('links?select=*&order=urutan.asc,id.asc').then(function (r) { return r.json(); }),
-                        supabaseFetch('app_settings?select=*').then(function (r) { return r.json(); })
+                        supabaseFetch(settingsEndpoint).then(function (r) { return r.json(); })
                     ])
                         .then(function (results) {
                             var rawCats = results[0] || [];
@@ -4396,11 +4400,11 @@
                                 }
                             };
 
-                            // Simpan cache lokal untuk ketahanan offline / jika database dijeda (Paused)
+                            // Simpan cache lokal untuk ketahanan offline (Tanpa menyimpan PIN rahasia di localStorage)
                             try {
                                 localStorage.setItem('ZETTLINK_CACHED_CATEGORIES', JSON.stringify(categories));
                                 localStorage.setItem('ZETTLINK_CACHED_LINKS', JSON.stringify(allLinks));
-                                if (restrictedPin) localStorage.setItem('ZETTLINK_CACHED_PIN', restrictedPin);
+                                localStorage.removeItem('ZETTLINK_CACHED_PIN');
                             } catch (e) { }
 
                             if (onSuccess) onSuccess(response);
@@ -4639,20 +4643,37 @@
 
                 if (action === 'verifyRestrictedPin') {
                     var inputPin = String(payload && payload.pin ? payload.pin : payload).trim();
-                    supabaseFetch('app_settings?key=eq.RESTRICTED_ACCESS_PIN&select=value')
+                    // 1. Prioritaskan verifikasi sisi server via PostgreSQL RPC (SECURITY DEFINER) agar PIN tidak terekspos di Inspect Element
+                    supabaseFetch('rpc/verify_restricted_pin', {
+                        method: 'POST',
+                        body: JSON.stringify({ input_pin: inputPin })
+                    })
                         .then(function (r) { return r.json(); })
-                        .then(function (rows) {
-                            var realPin = '';
-                            if (rows && rows[0]) {
-                                realPin = String(rows[0].value).replace(/^"|"$/g, '').trim();
-                            }
-                            if (inputPin === realPin) {
+                        .then(function (rpcResult) {
+                            var isValid = (rpcResult === true || (rpcResult && rpcResult.valid === true));
+                            if (isValid) {
                                 if (onSuccess) onSuccess({ success: true, message: 'Akses terbuka!' });
                             } else {
                                 if (onSuccess) onSuccess({ success: false, message: 'Kode PIN keamanan salah. Silakan coba lagi.' });
                             }
                         })
-                        .catch(function (err) { if (onError) onError(err); });
+                        .catch(function () {
+                            // 2. Fallback kompatibilitas jika fungsi SQL RPC belum dipasang di Supabase
+                            supabaseFetch('app_settings?key=eq.RESTRICTED_ACCESS_PIN&select=value')
+                                .then(function (r) { return r.json(); })
+                                .then(function (rows) {
+                                    var realPin = '';
+                                    if (rows && rows[0]) {
+                                        realPin = String(rows[0].value).replace(/^"|"$/g, '').trim();
+                                    }
+                                    if (realPin && inputPin === realPin) {
+                                        if (onSuccess) onSuccess({ success: true, message: 'Akses terbuka!' });
+                                    } else {
+                                        if (onSuccess) onSuccess({ success: false, message: 'Kode PIN keamanan salah. Silakan coba lagi.' });
+                                    }
+                                })
+                                .catch(function (err) { if (onError) onError(err); });
+                        });
                     return;
                 }
 
@@ -5382,12 +5403,11 @@
             // Muat data kategori & link dari cache lokal (Ketahanan Offline & Proteksi saat Supabase Paused)
             var cachedCats = localStorage.getItem('ZETTLINK_CACHED_CATEGORIES');
             var cachedLnks = localStorage.getItem('ZETTLINK_CACHED_LINKS');
-            var cachedPin = localStorage.getItem('ZETTLINK_CACHED_PIN');
+            localStorage.removeItem('ZETTLINK_CACHED_PIN');
             if (cachedCats && cachedLnks) {
                 try {
                     APP_STATE.categories = JSON.parse(cachedCats);
                     APP_STATE.links = JSON.parse(cachedLnks);
-                    if (cachedPin) APP_STATE.restrictedPin = String(cachedPin).trim();
                 } catch (e) { }
             }
 
@@ -5400,7 +5420,7 @@
         });
 
         /**
-         * HELPER ESCAPE STRING UNTUK KEAMANAN DOM RENDERING
+         * HELPER ESCAPE STRING & SANITASI PROTOKOL URL UNTUK KEAMANAN DOM RENDERING (ANTI-XSS)
          */
         function escapeHtml(str) {
             var text = String(str === undefined || str === null ? '' : str);
@@ -5410,6 +5430,18 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
+        }
+
+        function sanitizeUrl(rawUrl) {
+            var str = String(rawUrl === undefined || rawUrl === null ? '' : rawUrl).trim();
+            if (!str || str === '#') return '#';
+            if (/^(https?:\/\/|mailto:|tel:)/i.test(str)) {
+                return escapeHtml(str);
+            }
+            if (/^[a-zA-Z0-9][a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\/.*)?$/.test(str)) {
+                return escapeHtml('https://' + str);
+            }
+            return '#';
         }
 
         /**
@@ -5875,7 +5907,7 @@
                     '            <span class="count-pill"><i class="fa-solid fa-network-wired"></i> ' + childSubs.length + ' Sub &bull; ' + totalGrandChildren + ' Endpoints</span>' +
                     '          </div>' +
                     (hasUrl ?
-                        '          <a href="' + escapeHtml(mLink.url) + '" target="_blank" rel="noopener noreferrer" class="link-title-anchor">' +
+                        '          <a href="' + sanitizeUrl(mLink.url) + '" target="_blank" rel="noopener noreferrer" class="link-title-anchor">' +
                         '            <span>' + escapeHtml(mLink.judul) + '</span>' +
                         '            <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.75rem; opacity:0.7;"></i>' +
                         '          </a>' +
@@ -5967,7 +5999,7 @@
                                 (isSubHidden ? '            <span class="count-pill" style="color:var(--text-muted); border-color:rgba(255,255,255,0.12);"><i class="fa-solid fa-eye-slash"></i> Hidden</span>' : '') +
                                 '            <span class="count-pill">' + childSubSubs.length + ' Endpoints</span>' +
                                 '          </div>' +
-                                '          <a href="' + escapeHtml(sLink.url) + '" target="_blank" rel="noopener noreferrer" class="link-title-anchor" style="font-size:0.95rem;">' +
+                                '          <a href="' + sanitizeUrl(sLink.url) + '" target="_blank" rel="noopener noreferrer" class="link-title-anchor" style="font-size:0.95rem;">' +
                                 '            <span>' + escapeHtml(sLink.judul) + '</span>' +
                                 '            <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.7rem; opacity:0.7;"></i>' +
                                 '          </a>' +
@@ -6037,7 +6069,7 @@
                                         '              <span>' + eStatus + '</span>' +
                                         '            </div>' +
                                         '          </div>' +
-                                        '          <a href="' + escapeHtml(gLink.url) + '" target="_blank" rel="noopener noreferrer" class="link-title-anchor" style="font-size:0.9rem;">' +
+                                        '          <a href="' + sanitizeUrl(gLink.url) + '" target="_blank" rel="noopener noreferrer" class="link-title-anchor" style="font-size:0.9rem;">' +
                                         '            <span>' + escapeHtml(gLink.judul) + '</span>' +
                                         '            <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.68rem; opacity:0.7;"></i>' +
                                         '          </a>' +
@@ -6053,7 +6085,7 @@
                                             '        <button type="button" class="action-icon-btn' + (isGLast ? ' disabled' : '') + '" ' + (isGLast ? 'disabled' : 'onclick="handleMoveLinkOrder(\'' + gId + '\', \'DOWN\')"') + ' title="' + (isGLast ? 'Posisi sudah terbawah' : 'Pindah Urutan Turun') + '">' +
                                             '          <i class="fa-solid fa-arrow-down"></i>' +
                                             '        </button>' : '') +
-                                        '        <a href="' + escapeHtml(gLink.url) + '" target="_blank" rel="noopener noreferrer" class="btn-direct-open" title="Buka Tautan Langsung">' +
+                                        '        <a href="' + sanitizeUrl(gLink.url) + '" target="_blank" rel="noopener noreferrer" class="btn-direct-open" title="Buka Tautan Langsung">' +
                                         '          <i class="fa-solid fa-arrow-up-right-from-square"></i> <span>Akses</span>' +
                                         '        </a>' +
                                         '        <button type="button" class="action-icon-btn" onclick="copyLinkUrl(\'' + gId + '\')" title="Salin URL">' +
@@ -6612,11 +6644,11 @@
                 }
 
                 setTimeout(function () {
-                    var targetUrl = ACTIVE_RESTRICTED_TARGET ? ACTIVE_RESTRICTED_TARGET.url : '';
+                    var targetUrl = ACTIVE_RESTRICTED_TARGET ? String(ACTIVE_RESTRICTED_TARGET.url || '').trim() : '';
                     var targetTitle = ACTIVE_RESTRICTED_TARGET ? ACTIVE_RESTRICTED_TARGET.judul : '';
                     closeRestrictedPinModal();
                     showToast('PIN Valid! Membuka ' + targetTitle + '...', 'success');
-                    if (targetUrl) {
+                    if (targetUrl && /^(https?:\/\/|mailto:|tel:)/i.test(targetUrl)) {
                         var win = window.open(targetUrl, '_blank', 'noopener,noreferrer');
                         if (!win || win.closed || typeof win.closed === 'undefined') {
                             showToast('Tab baru terhalang popup blocker. Mengalihkan langsung...', 'info');
@@ -6644,16 +6676,7 @@
                 }
             }
 
-            // 2. Cek master PIN lokal (dengan jeda halus 250ms agar animasi loading terbaca manusia)
-            var currentMasterPin = APP_STATE.restrictedPin;
-            if (currentMasterPin && pinVal === currentMasterPin) {
-                setTimeout(function () {
-                    onPinSuccess();
-                }, 250);
-                return;
-            }
-
-            // 3. Verifikasi via backend
+            // 2. Verifikasi PIN langsung ke backend Supabase (tanpa menyimpan PIN di memori publik)
             if (typeof google !== 'undefined' && google.script && google.script.run) {
                 google.script.run
                     .withSuccessHandler(function (res) {
@@ -7144,6 +7167,10 @@
         }
 
         function showAdminDashboard() {
+            if (!APP_STATE.user || !localStorage.getItem('ZETTLINK_SUPABASE_TOKEN')) {
+                openAdminLoginModal();
+                return;
+            }
             var landEl = document.getElementById('landingView');
             var appEl = document.getElementById('appView');
             if (landEl) landEl.classList.add('hidden');
@@ -7418,7 +7445,7 @@
                             '    <span style="cursor:pointer;" onclick="openRestrictedPinModal(\'' + mId + '\')">' +
                             escapeHtml(itemM.judul) + ' <i class="fa-solid fa-lock" style="font-size:0.72rem; color:var(--accent-orange, #f97316); margin-left:4px;"></i></span>'
                             :
-                            '    <a href="' + escapeHtml(itemM.url) + '" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:none;">' +
+                            '    <a href="' + sanitizeUrl(itemM.url) + '" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:none;">' +
                             escapeHtml(itemM.judul) + ' <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.72rem; opacity:0.6;"></i></a>'
                         )
                         :
@@ -7434,7 +7461,7 @@
                             '      <i class="fa-solid fa-lock"></i> <span>Akses Terbatas</span>' +
                             '    </button>'
                             :
-                            '    <a href="' + escapeHtml(itemM.url) + '" target="_blank" rel="noopener noreferrer" class="btn-public-access">' +
+                            '    <a href="' + sanitizeUrl(itemM.url) + '" target="_blank" rel="noopener noreferrer" class="btn-public-access">' +
                             '      <i class="fa-solid fa-arrow-up-right-from-square"></i> <span>Buka Tautan</span>' +
                             '    </a>' +
                             '    <button type="button" class="btn-public-copy" onclick="copyLinkUrl(\'' + mId + '\')" title="Salin URL">' +
@@ -7481,7 +7508,7 @@
                                     '      <i class="fa-solid fa-lock"></i> Akses' +
                                     '    </button>'
                                     :
-                                    '    <a href="' + escapeHtml(sItem.url) + '" target="_blank" rel="noopener noreferrer" class="btn-sub-direct">' +
+                                    '    <a href="' + sanitizeUrl(sItem.url) + '" target="_blank" rel="noopener noreferrer" class="btn-sub-direct">' +
                                     '      <i class="fa-solid fa-arrow-up-right-from-square"></i> Akses' +
                                     '    </a>' +
                                     '    <button type="button" class="action-icon-btn" style="width:28px; height:28px; font-size:0.75rem;" onclick="copyLinkUrl(\'' + sId + '\')" title="Salin URL">' +
@@ -7514,7 +7541,7 @@
                                             '      <i class="fa-solid fa-lock"></i> Akses' +
                                             '    </button>'
                                             :
-                                            '    <a href="' + escapeHtml(gItem.url) + '" target="_blank" rel="noopener noreferrer" class="btn-sub-direct" style="background:rgba(192,132,252,0.15); border-color:rgba(192,132,252,0.35); color:#c084fc;">' +
+                                            '    <a href="' + sanitizeUrl(gItem.url) + '" target="_blank" rel="noopener noreferrer" class="btn-sub-direct" style="background:rgba(192,132,252,0.15); border-color:rgba(192,132,252,0.35); color:#c084fc;">' +
                                             '      <i class="fa-solid fa-arrow-up-right-from-square"></i> Akses' +
                                             '    </a>' +
                                             '    <button type="button" class="action-icon-btn" style="width:28px; height:28px; font-size:0.75rem;" onclick="copyLinkUrl(\'' + gId + '\')" title="Salin URL">' +
