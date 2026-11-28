@@ -2990,6 +2990,96 @@
             box-shadow: 0 4px 12px rgba(255, 102, 0, 0.35);
         }
 
+        /* VISUAL PORTFOLIO GALLERY (16:9 TOP BANNER - OPSI A + OPSI 1) */
+        .public-thumb-banner {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #0a0c12;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: zoom-in;
+            margin-bottom: 4px;
+        }
+
+        .public-thumb-banner img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .public-thumb-banner:hover img {
+            transform: scale(1.04);
+        }
+
+        .public-thumb-banner::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 55%, rgba(9, 10, 15, 0.72) 100%);
+            pointer-events: none;
+        }
+
+        .thumb-zoom-hint {
+            position: absolute;
+            right: 8px;
+            bottom: 8px;
+            z-index: 2;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #ffffff;
+            background: rgba(9, 10, 15, 0.78);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            padding: 3px 9px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            opacity: 0.85;
+            transition: all 0.2s ease;
+        }
+
+        .public-thumb-banner:hover .thumb-zoom-hint {
+            opacity: 1;
+            border-color: var(--cyber-orange);
+            color: #ff944d;
+        }
+
+        .admin-mini-thumb {
+            width: 56px;
+            height: 34px;
+            border-radius: 7px;
+            object-fit: cover;
+            border: 1px solid rgba(6, 182, 212, 0.45);
+            cursor: zoom-in;
+            flex-shrink: 0;
+            background: #0a0c12;
+            transition: transform 0.2s ease;
+        }
+
+        .admin-mini-thumb:hover {
+            transform: scale(1.08);
+            border-color: var(--cyber-orange);
+        }
+
+        .thumb-upload-zone {
+            border: 1px dashed rgba(6, 182, 212, 0.4);
+            background: rgba(6, 182, 212, 0.04);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 14px;
+            transition: all 0.2s ease;
+        }
+
+        body.theme-light .public-thumb-banner {
+            border-color: #cbd5e1;
+            background: #f1f5f9;
+        }
+
         /* Public Landing Footer */
         .landing-footer {
             background: #06070b;
@@ -3908,6 +3998,7 @@
                 <input type="hidden" id="formLinkId">
                 <input type="hidden" id="formLinkParentId">
                 <input type="hidden" id="formLinkLevel" value="1">
+                <input type="hidden" id="formLinkThumbnailUrl">
 
                 <div class="form-group">
                     <label class="form-label" for="formLinkCategory">Kategori Link</label>
@@ -3965,6 +4056,29 @@
                             <option value="Beta">🧪 Versi Beta</option>
                             <option value="Maintenance">🛠️ Maintenance (Perbaikan)</option>
                         </select>
+                    </div>
+                </div>
+
+                <div class="thumb-upload-zone" id="linkModalThumbZone">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+                        <label class="form-label" style="margin-bottom:0; color:var(--accent-cyan);">
+                            <i class="fa-solid fa-image"></i> Gambar Preview Dashboard (Opsional)
+                        </label>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <input type="file" id="linkModalThumbInput" accept="image/*" class="hidden" onchange="handleModalThumbnailSelect(this)">
+                            <button type="button" id="btnUploadModalThumb" class="btn btn-glass btn-sm" style="height:30px; font-size:0.74rem; border-color:rgba(6,182,212,0.45); color:var(--accent-cyan);" onclick="document.getElementById('linkModalThumbInput').click()">
+                                <i class="fa-solid fa-upload"></i> <span>Upload Gambar</span>
+                            </button>
+                            <button type="button" id="btnClearModalThumb" class="btn btn-glass btn-sm hidden" style="height:30px; font-size:0.74rem; border-color:rgba(244,63,94,0.4); color:#fda4af;" onclick="clearModalThumbnail()">
+                                <i class="fa-solid fa-trash"></i> <span>Hapus</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="linkModalThumbPreviewWrap" class="hidden" style="margin-top:8px;">
+                        <img id="linkModalThumbPreviewImg" src="" alt="Preview Thumbnail" style="width:100%; max-height:165px; object-fit:cover; border-radius:8px; border:1px solid rgba(255,255,255,0.12); display:block;">
+                    </div>
+                    <div id="linkModalThumbHint" style="font-size:0.72rem; color:var(--text-muted); line-height:1.4;">
+                        Pilih file screenshot (JPG/PNG/WebP) atau langsung tekan <strong>Ctrl + V</strong> di sini. Gambar otomatis dikompres agar ringan.
                     </div>
                 </div>
 
@@ -4574,6 +4688,39 @@
         </div>
     </div>
 
+    <!-- Input File Tersembunyi untuk Upload Cepat Gambar Per Item dari Dashboard Admin -->
+    <input type="file" id="quickThumbFileInput" accept="image/*" class="hidden" onchange="handleQuickThumbnailFile(this)">
+
+    <!-- ========================================================================
+       10. MODAL LIGHTBOX ZOOM PREVIEW GAMBAR APLIKASI
+       ======================================================================== -->
+    <div id="imageLightboxModal" class="modal-backdrop hidden" onclick="if(event.target === this) closeImageLightbox()">
+        <div class="modal-dialog" style="max-width: 860px; padding: 18px;">
+            <div class="modal-header" style="margin-bottom: 12px;">
+                <div class="modal-title" style="color: #fff; display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-image" style="color: var(--cyber-orange);"></i>
+                    <span id="lightboxTitle">Preview Aplikasi</span>
+                </div>
+                <button type="button" class="action-icon-btn" onclick="closeImageLightbox()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div style="background: #080a0f; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; margin-bottom: 12px; text-align: center;">
+                <img id="lightboxImage" src="" alt="Preview Aplikasi" style="max-width: 100%; max-height: 70vh; object-fit: contain; display: block; margin: 0 auto;">
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                <p id="lightboxDesc" style="font-size: 0.84rem; color: var(--text-secondary); margin: 0; flex: 1; min-width: 200px;"></p>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button type="button" class="btn btn-glass" onclick="closeImageLightbox()">Tutup</button>
+                    <a id="lightboxOpenLinkBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary hidden" style="text-decoration: none;">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        <span>Buka Aplikasi</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         /**
          * ==========================================================================
@@ -4701,6 +4848,7 @@
                                     visibilitas: l.visibilitas || 'Tampil',
                                     clickCount: parseInt(l.click_count) || 0,
                                     labelStatus: l.label_status || 'Aktif',
+                                    thumbnailUrl: l.thumbnail_url || '',
                                     updatedAt: l.updated_at || ''
                                 };
                             });
@@ -4833,6 +4981,7 @@
                         urutan: parseInt(payload.urutan) || 1,
                         visibilitas: String(payload.visibilitas || 'Tampil').trim(),
                         label_status: String(payload.labelStatus || 'Aktif').trim(),
+                        thumbnail_url: (payload.thumbnailUrl && String(payload.thumbnailUrl).trim()) ? String(payload.thumbnailUrl).trim() : '',
                         updated_at: new Date().toISOString()
                     };
 
@@ -6009,7 +6158,7 @@
 
         function exportBackupCsv() {
             var dStr = new Date().toISOString().slice(0, 10);
-            var headers = ['ID', 'Level', 'Kategori', 'Parent_ID', 'Judul', 'URL', 'Deskripsi', 'Status_Pin', 'Visibilitas', 'Label_Status', 'Jumlah_Klik', 'Urutan'];
+            var headers = ['ID', 'Level', 'Kategori', 'Parent_ID', 'Judul', 'URL', 'Deskripsi', 'Status_Pin', 'Visibilitas', 'Label_Status', 'Jumlah_Klik', 'Thumbnail_URL', 'Urutan'];
             var rows = [headers.join(',')];
             for (var i = 0; i < APP_STATE.links.length; i++) {
                 var l = APP_STATE.links[i];
@@ -6026,6 +6175,7 @@
                     l.visibilitas || 'Tampil',
                     l.labelStatus || 'Aktif',
                     l.clickCount || 0,
+                    l.thumbnailUrl || '',
                     l.urutan || 1
                 ].map(function (val) {
                     return '"' + String(val).replace(/"/g, '""') + '"';
@@ -6043,6 +6193,258 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             showToast('File Tabel Excel (.CSV) berhasil diunduh!', 'success');
+        }
+
+        /**
+         * ==========================================================================
+         * 6. MESIN KOMPRESI & UPLOAD GAMBAR PREVIEW KE SUPABASE STORAGE
+         * ==========================================================================
+         */
+        function compressImageToWebpOrJpeg(file, maxWidth, quality) {
+            return new Promise(function (resolve, reject) {
+                if (!file || !file.type || file.type.indexOf('image/') !== 0) {
+                    reject(new Error('File yang dipilih bukan gambar yang valid.'));
+                    return;
+                }
+                var reader = new FileReader();
+                reader.onload = function (ev) {
+                    var img = new Image();
+                    img.onload = function () {
+                        var targetW = maxWidth || 1280;
+                        var w = img.width;
+                        var h = img.height;
+                        if (w > targetW) {
+                            h = Math.round(h * (targetW / w));
+                            w = targetW;
+                        }
+                        var canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        var ctx = canvas.getContext('2d');
+                        ctx.fillStyle = '#090a0f';
+                        ctx.fillRect(0, 0, w, h);
+                        ctx.drawImage(img, 0, 0, w, h);
+
+                        var q = quality || 0.84;
+                        var mime = 'image/webp';
+                        var ext = 'webp';
+                        var testData = canvas.toDataURL(mime, q);
+                        if (testData.indexOf('data:image/webp') !== 0) {
+                            mime = 'image/jpeg';
+                            ext = 'jpg';
+                        }
+
+                        canvas.toBlob(function (blob) {
+                            if (!blob) {
+                                reject(new Error('Gagal memproses kompresi gambar.'));
+                                return;
+                            }
+                            resolve({ blob: blob, ext: ext, mime: mime });
+                        }, mime, q);
+                    };
+                    img.onerror = function () { reject(new Error('Gagal membaca dimensi gambar.')); };
+                    img.src = ev.target.result;
+                };
+                reader.onerror = function () { reject(new Error('Gagal membaca file dari perangkat.')); };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function uploadBlobToSupabaseStorage(blob, ext, linkId, isRetry) {
+            var token = localStorage.getItem('ZETTLINK_SUPABASE_TOKEN');
+            if (!token) {
+                return Promise.reject(new Error('Sesi Admin tidak aktif. Silakan login ulang untuk mengunggah gambar.'));
+            }
+            var safeId = String(linkId || ('TMP-' + Date.now())).replace(/[^a-zA-Z0-9_-]/g, '');
+            var fileName = safeId + '_' + Date.now() + '.' + (ext || 'webp');
+            var uploadUrl = SUPABASE_CONFIG.url + '/storage/v1/object/project-thumbnails/' + encodeURIComponent(fileName);
+
+            return fetch(uploadUrl, {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_CONFIG.key,
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': blob.type || 'image/webp',
+                    'x-upsert': 'true'
+                },
+                body: blob
+            }).then(function (res) {
+                if (!res.ok) {
+                    return res.json().catch(function () { return { message: res.statusText }; }).then(function (errData) {
+                        var msg = (errData && (errData.message || errData.error)) || ('HTTP ' + res.status);
+                        if (!isRetry && (res.status === 401 || res.status === 403 || /jwt expired|invalid jwt/i.test(String(msg)))) {
+                            return refreshSupabaseSessionToken().then(function (newToken) {
+                                if (newToken) {
+                                    return uploadBlobToSupabaseStorage(blob, ext, linkId, true);
+                                }
+                                throw new Error('Sesi login kedaluwarsa. Silakan login ulang.');
+                            });
+                        }
+                        throw new Error('Gagal upload ke Storage: ' + msg);
+                    });
+                }
+                return SUPABASE_CONFIG.url + '/storage/v1/object/public/project-thumbnails/' + encodeURIComponent(fileName);
+            });
+        }
+
+        function setModalThumbnailPreview(url) {
+            var hiddenInput = document.getElementById('formLinkThumbnailUrl');
+            var wrap = document.getElementById('linkModalThumbPreviewWrap');
+            var img = document.getElementById('linkModalThumbPreviewImg');
+            var clearBtn = document.getElementById('btnClearModalThumb');
+            var cleanUrl = String(url || '').trim();
+
+            if (hiddenInput) hiddenInput.value = cleanUrl;
+            if (cleanUrl) {
+                if (img) img.src = cleanUrl;
+                if (wrap) wrap.classList.remove('hidden');
+                if (clearBtn) clearBtn.classList.remove('hidden');
+            } else {
+                if (img) img.src = '';
+                if (wrap) wrap.classList.add('hidden');
+                if (clearBtn) clearBtn.classList.add('hidden');
+            }
+        }
+
+        function clearModalThumbnail() {
+            var fileInp = document.getElementById('linkModalThumbInput');
+            if (fileInp) fileInp.value = '';
+            setModalThumbnailPreview('');
+            showToast('Gambar preview dihapus dari formulir.', 'info');
+        }
+
+        function processModalThumbnailFile(file) {
+            if (!file) return;
+            var btn = document.getElementById('btnUploadModalThumb');
+            var linkId = document.getElementById('formLinkId') ? document.getElementById('formLinkId').value : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Mengunggah...</span>';
+            }
+            compressImageToWebpOrJpeg(file, 1280, 0.84)
+                .then(function (comp) {
+                    return uploadBlobToSupabaseStorage(comp.blob, comp.ext, linkId || ('NEW-' + Date.now()), false);
+                })
+                .then(function (publicUrl) {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-upload"></i> <span>Ganti Gambar</span>';
+                    }
+                    setModalThumbnailPreview(publicUrl);
+                    showToast('Gambar berhasil dikompres & diunggah ke Supabase!', 'success');
+                })
+                .catch(function (err) {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-upload"></i> <span>Upload Gambar</span>';
+                    }
+                    showToast(err.message, 'error');
+                });
+        }
+
+        function handleModalThumbnailSelect(inputEl) {
+            if (inputEl && inputEl.files && inputEl.files[0]) {
+                processModalThumbnailFile(inputEl.files[0]);
+            }
+        }
+
+        // Dukungan Paste Screenshot (Ctrl + V) Langsung saat Modal Tambah/Edit Link Terbuka
+        window.addEventListener('paste', function (e) {
+            var linkModal = document.getElementById('linkModal');
+            if (!linkModal || linkModal.classList.contains('hidden')) return;
+            var items = (e.clipboardData || (e.originalEvent && e.originalEvent.clipboardData) || {}).items;
+            if (!items) return;
+            for (var i = 0; i < items.length; i++) {
+                if (items[i].type && items[i].type.indexOf('image/') === 0) {
+                    var file = items[i].getAsFile();
+                    if (file) {
+                        e.preventDefault();
+                        processModalThumbnailFile(file);
+                        break;
+                    }
+                }
+            }
+        });
+
+        var QUICK_UPLOAD_TARGET_ID = '';
+
+        function triggerQuickThumbnailUpload(linkId) {
+            QUICK_UPLOAD_TARGET_ID = String(linkId || '').trim();
+            var inp = document.getElementById('quickThumbFileInput');
+            if (!inp || !QUICK_UPLOAD_TARGET_ID) return;
+            inp.value = '';
+            inp.click();
+        }
+
+        function handleQuickThumbnailFile(inputEl) {
+            if (!inputEl || !inputEl.files || !inputEl.files[0] || !QUICK_UPLOAD_TARGET_ID) return;
+            var targetId = QUICK_UPLOAD_TARGET_ID;
+            var file = inputEl.files[0];
+            var targetItem = findLinkById(targetId);
+            var titleStr = targetItem ? targetItem.judul : targetId;
+
+            showToast('Mengompres & mengunggah gambar untuk "' + titleStr + '"...', 'info');
+
+            compressImageToWebpOrJpeg(file, 1280, 0.84)
+                .then(function (comp) {
+                    return uploadBlobToSupabaseStorage(comp.blob, comp.ext, targetId, false);
+                })
+                .then(function (publicUrl) {
+                    return supabaseFetch('links?id=eq.' + encodeURIComponent(targetId), {
+                        method: 'PATCH',
+                        body: JSON.stringify({ thumbnail_url: publicUrl, updated_at: new Date().toISOString() })
+                    }).then(function () { return publicUrl; });
+                })
+                .then(function (publicUrl) {
+                    if (targetItem) {
+                        targetItem.thumbnailUrl = publicUrl;
+                    }
+                    try {
+                        localStorage.setItem('ZETTLINK_CACHED_LINKS', JSON.stringify(APP_STATE.links));
+                    } catch (e) { }
+                    renderAllComponents();
+                    renderLandingComponents();
+                    showToast('Gambar preview "' + titleStr + '" berhasil dipasang!', 'success');
+                })
+                .catch(function (err) {
+                    showToast('Gagal upload gambar: ' + err.message, 'error');
+                });
+        }
+
+        function openImageLightbox(linkId) {
+            var item = findLinkById(linkId);
+            if (!item || !item.thumbnailUrl) return;
+            var modal = document.getElementById('imageLightboxModal');
+            var imgEl = document.getElementById('lightboxImage');
+            var titleEl = document.getElementById('lightboxTitle');
+            var descEl = document.getElementById('lightboxDesc');
+            var openBtn = document.getElementById('lightboxOpenLinkBtn');
+
+            if (imgEl) imgEl.src = item.thumbnailUrl;
+            if (titleEl) titleEl.textContent = item.judul || 'Preview Aplikasi';
+            if (descEl) descEl.textContent = item.deskripsi || '';
+
+            if (openBtn) {
+                var hasUrl = Boolean(item.url && item.url.trim() !== '' && item.url.trim() !== '#');
+                var isRestricted = (item.visibilitas === 'Restricted');
+                if (hasUrl && !isRestricted) {
+                    openBtn.href = sanitizeUrl(item.url);
+                    openBtn.onclick = function (ev) {
+                        closeImageLightbox();
+                        return handlePublicLinkClick(ev, item.id);
+                    };
+                    openBtn.classList.remove('hidden');
+                } else {
+                    openBtn.classList.add('hidden');
+                }
+            }
+
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeImageLightbox() {
+            var modal = document.getElementById('imageLightboxModal');
+            if (modal) modal.classList.add('hidden');
         }
 
         // Global Keyboard Shortcut Ctrl + K untuk Fokus Pencarian Cepat
@@ -6510,6 +6912,7 @@
                     '        <div class="node-badge-icon">' +
                     '          <i class="fa-solid fa-bolt"></i>' +
                     '        </div>' +
+                    (mLink.thumbnailUrl ? '<img src="' + sanitizeUrl(mLink.thumbnailUrl) + '" class="admin-mini-thumb" onclick="openImageLightbox(\'' + mId + '\')" title="Klik untuk perbesar gambar">' : '') +
                     '        <div class="node-info">' +
                     '          <div class="node-meta-row">' +
                     '            <span class="level-badge level-1-badge"><i class="fa-solid fa-bolt"></i> Trigger Node</span>' +
@@ -6560,6 +6963,9 @@
                         '        <button type="button" class="action-icon-btn" onclick="shareLinkWhatsApp(\'' + mId + '\')" title="Bagikan ke WhatsApp">' +
                         '          <i class="fa-brands fa-whatsapp" style="color:#22c55e;"></i>' +
                         '        </button>' : '') +
+                    '        <button type="button" class="action-icon-btn" onclick="triggerQuickThumbnailUpload(\'' + mId + '\')" title="' + (mLink.thumbnailUrl ? 'Ganti Gambar Preview' : 'Upload Gambar Preview') + '">' +
+                    '          <i class="fa-solid fa-image" style="color:' + (mLink.thumbnailUrl ? 'var(--accent-cyan)' : 'var(--text-muted)') + ';"></i>' +
+                    '        </button>' +
                     '        <button type="button" class="action-icon-btn ' + (isPinned ? 'active-pin' : '') + '" onclick="handleTogglePin(\'' + mId + '\')" title="Sematkan ke Atas">' +
                     '          <i class="fa-solid fa-thumbtack"></i>' +
                     '        </button>' +
@@ -6616,6 +7022,7 @@
                                 '        <div class="node-badge-icon process">' +
                                 '          <i class="fa-solid ' + pIcon + '"></i>' +
                                 '        </div>' +
+                                (sLink.thumbnailUrl ? '<img src="' + sanitizeUrl(sLink.thumbnailUrl) + '" class="admin-mini-thumb" onclick="openImageLightbox(\'' + sId + '\')" title="Klik untuk perbesar gambar">' : '') +
                                 '        <div class="node-info">' +
                                 '          <div class="node-meta-row">' +
                                 '            <span class="level-badge level-2-badge"><i class="fa-solid fa-gear"></i> Process Node</span>' +
@@ -6652,6 +7059,9 @@
                                 '        </button>' +
                                 '        <button type="button" class="action-icon-btn" onclick="shareLinkWhatsApp(\'' + sId + '\')" title="Bagikan ke WhatsApp">' +
                                 '          <i class="fa-brands fa-whatsapp" style="color:#22c55e;"></i>' +
+                                '        </button>' +
+                                '        <button type="button" class="action-icon-btn" onclick="triggerQuickThumbnailUpload(\'' + sId + '\')" title="' + (sLink.thumbnailUrl ? 'Ganti Gambar Preview' : 'Upload Gambar Preview') + '">' +
+                                '          <i class="fa-solid fa-image" style="color:' + (sLink.thumbnailUrl ? 'var(--accent-cyan)' : 'var(--text-muted)') + ';"></i>' +
                                 '        </button>' +
                                 '        <button type="button" class="action-icon-btn ' + (isSubRestricted ? 'active-lock' : '') + '" onclick="handleToggleRestricted(\'' + sId + '\')" title="' + (isSubRestricted ? 'Akses Terbatas Aktif (Wajib PIN) - Klik untuk Buka Kunci' : 'Kunci Akses (Wajib PIN)') + '">' +
                                 '          <i class="fa-solid ' + (isSubRestricted ? 'fa-lock' : 'fa-lock-open') + '" style="color:' + (isSubRestricted ? 'var(--cyber-orange, #f97316)' : 'var(--text-muted)') + ';"></i>' +
@@ -6691,6 +7101,7 @@
                                         '        <div class="node-badge-icon endpoint">' +
                                         '          <i class="fa-solid ' + eIcon + '"></i>' +
                                         '        </div>' +
+                                        (gLink.thumbnailUrl ? '<img src="' + sanitizeUrl(gLink.thumbnailUrl) + '" class="admin-mini-thumb" onclick="openImageLightbox(\'' + gId + '\')" title="Klik untuk perbesar gambar">' : '') +
                                         '        <div class="node-info">' +
                                         '          <div class="node-meta-row">' +
                                         '            <span class="level-badge level-3-badge"><i class="fa-solid fa-circle-nodes"></i> Endpoint</span>' +
@@ -6730,6 +7141,9 @@
                                         '        </button>' +
                                         '        <button type="button" class="action-icon-btn" onclick="shareLinkWhatsApp(\'' + gId + '\')" title="Bagikan ke WhatsApp">' +
                                         '          <i class="fa-brands fa-whatsapp" style="color:#22c55e;"></i>' +
+                                        '        </button>' +
+                                        '        <button type="button" class="action-icon-btn" onclick="triggerQuickThumbnailUpload(\'' + gId + '\')" title="' + (gLink.thumbnailUrl ? 'Ganti Gambar Preview' : 'Upload Gambar Preview') + '">' +
+                                        '          <i class="fa-solid fa-image" style="color:' + (gLink.thumbnailUrl ? 'var(--accent-cyan)' : 'var(--text-muted)') + ';"></i>' +
                                         '        </button>' +
                                         '        <button type="button" class="action-icon-btn ' + (isGrandRestricted ? 'active-lock' : '') + '" onclick="handleToggleRestricted(\'' + gId + '\')" title="' + (isGrandRestricted ? 'Akses Terbatas Aktif (Wajib PIN) - Klik untuk Buka Kunci' : 'Kunci Akses (Wajib PIN)') + '">' +
                                         '          <i class="fa-solid ' + (isGrandRestricted ? 'fa-lock' : 'fa-lock-open') + '" style="color:' + (isGrandRestricted ? 'var(--cyber-orange, #f97316)' : 'var(--text-muted)') + ';"></i>' +
@@ -6895,6 +7309,14 @@
             if (visSelect) visSelect.value = 'Tampil';
             var lblStatusSelect = document.getElementById('formLinkLabelStatus');
             if (lblStatusSelect) lblStatusSelect.value = 'Aktif';
+            var btnUpModal = document.getElementById('btnUploadModalThumb');
+            if (btnUpModal) {
+                btnUpModal.disabled = false;
+                btnUpModal.innerHTML = '<i class="fa-solid fa-upload"></i> <span>Upload Gambar</span>';
+            }
+            var modalThumbFile = document.getElementById('linkModalThumbInput');
+            if (modalThumbFile) modalThumbFile.value = '';
+            setModalThumbnailPreview('');
 
             var catSelect = document.getElementById('formLinkCategory');
             if (defaultCategoryId) {
@@ -6970,6 +7392,14 @@
             if (visEditSelect) visEditSelect.value = (item.visibilitas === 'Hidden') ? 'Hidden' : ((item.visibilitas === 'Restricted') ? 'Restricted' : 'Tampil');
             var lblStatusEdit = document.getElementById('formLinkLabelStatus');
             if (lblStatusEdit) lblStatusEdit.value = item.labelStatus || 'Aktif';
+            var btnUpEdit = document.getElementById('btnUploadModalThumb');
+            if (btnUpEdit) {
+                btnUpEdit.disabled = false;
+                btnUpEdit.innerHTML = '<i class="fa-solid fa-upload"></i> <span>' + (item.thumbnailUrl ? 'Ganti Gambar' : 'Upload Gambar') + '</span>';
+            }
+            var modalThumbEdit = document.getElementById('linkModalThumbInput');
+            if (modalThumbEdit) modalThumbEdit.value = '';
+            setModalThumbnailPreview(item.thumbnailUrl || '');
 
             var isMain = (parseInt(item.level, 10) === 1);
             var lblUrl = document.getElementById('lblFormLinkUrl');
@@ -7033,6 +7463,7 @@
             var pinVal = String(document.getElementById('formLinkPin').value || 'Normal').trim();
             var visVal = String((document.getElementById('formLinkVisibilitas') ? document.getElementById('formLinkVisibilitas').value : 'Tampil') || 'Tampil').trim();
             var labelStatusVal = String((document.getElementById('formLinkLabelStatus') ? document.getElementById('formLinkLabelStatus').value : 'Aktif') || 'Aktif').trim();
+            var thumbnailUrlVal = String((document.getElementById('formLinkThumbnailUrl') ? document.getElementById('formLinkThumbnailUrl').value : '') || '').trim();
 
             if (!judulVal) {
                 showToast('Judul Tautan / Link wajib diisi.', 'error');
@@ -7067,6 +7498,7 @@
                 urutan: orderVal,
                 visibilitas: visVal,
                 labelStatus: labelStatusVal,
+                thumbnailUrl: thumbnailUrlVal,
                 clickCount: existingItem ? (parseInt(existingItem.clickCount, 10) || 0) : 0,
                 updatedAt: 'Baru saja'
             };
@@ -7092,6 +7524,10 @@
                 }
             }
 
+            try {
+                localStorage.setItem('ZETTLINK_CACHED_LINKS', JSON.stringify(APP_STATE.links));
+            } catch (e) { }
+
             closeLinkModal();
             renderAllComponents();
             renderLandingComponents();
@@ -7108,7 +7544,8 @@
                 statusPin: pinVal,
                 urutan: orderVal,
                 visibilitas: visVal,
-                labelStatus: labelStatusVal
+                labelStatus: labelStatusVal,
+                thumbnailUrl: thumbnailUrlVal
             };
 
             if (typeof google !== 'undefined' && google.script && google.script.run) {
@@ -8120,6 +8557,11 @@
                         '    </div>' +
                         '  </div>'
                         :
+                        (itemM.thumbnailUrl ?
+                            '<div class="public-thumb-banner" style="margin-bottom:14px;" onclick="openImageLightbox(\'' + mId + '\')" title="Klik untuk memperbesar gambar preview">' +
+                            '  <img src="' + sanitizeUrl(itemM.thumbnailUrl) + '" alt="' + escapeHtml(itemM.judul) + '" loading="lazy">' +
+                            '  <div class="thumb-zoom-hint"><i class="fa-solid fa-expand"></i> Perbesar</div>' +
+                            '</div>' : '') +
                         '  <div class="public-card-meta">' +
                         '    <span class="cat-pill" style="border: 1px solid ' + escapeHtml(catM.warna) + '44;">' +
                         '      <span class="cat-dot" style="background:' + escapeHtml(catM.warna) + ';"></span>' +
@@ -8180,6 +8622,11 @@
 
                         html +=
                             '<div class="public-sublink-row' + (isSRestricted ? ' node-restricted' : '') + '">' +
+                            (sItem.thumbnailUrl ?
+                                '<div class="public-thumb-banner" onclick="openImageLightbox(\'' + sId + '\')" title="Klik untuk memperbesar gambar preview">' +
+                                '  <img src="' + sanitizeUrl(sItem.thumbnailUrl) + '" alt="' + escapeHtml(sItem.judul) + '" loading="lazy">' +
+                                '  <div class="thumb-zoom-hint"><i class="fa-solid fa-expand"></i> Preview</div>' +
+                                '</div>' : '') +
                             '  <div class="subcard-top-bar">' +
                             '    <div class="subcard-badges-left">' +
                             '      ' + renderStatusLabelBadge(sItem.labelStatus, sItem.deskripsi, false) +
@@ -8222,6 +8669,11 @@
                                 var isGRestricted = (gItem.visibilitas === 'Restricted');
                                 html +=
                                     '<div style="padding:10px 12px; border-radius:10px; background:rgba(168,85,247,0.06); border:1px solid rgba(192,132,252,0.22); display:flex; flex-direction:column; gap:8px;">' +
+                                    (gItem.thumbnailUrl ?
+                                        '<div class="public-thumb-banner" onclick="openImageLightbox(\'' + gId + '\')" title="Klik untuk memperbesar gambar preview">' +
+                                        '  <img src="' + sanitizeUrl(gItem.thumbnailUrl) + '" alt="' + escapeHtml(gItem.judul) + '" loading="lazy">' +
+                                        '  <div class="thumb-zoom-hint"><i class="fa-solid fa-expand"></i> Preview</div>' +
+                                        '</div>' : '') +
                                     '  <div class="subcard-top-bar">' +
                                     '    <div class="subcard-badges-left">' +
                                     '      ' + renderStatusLabelBadge(gItem.labelStatus, gItem.deskripsi, false) +
