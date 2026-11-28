@@ -1,0 +1,27 @@
+name: Supabase Keep-Alive (Anti-Paused)
+
+on:
+  schedule:
+    # Mengetuk database Supabase otomatis setiap 3 hari sekali jam 10:00 WIB (03:00 UTC)
+    # Mencegah proyek Supabase Free Tier terkena Pause otomatis (batas inaktivitas 7 hari)
+    - cron: '0 3 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase PostgreSQL REST API
+        run: |
+          echo "Mengetuk server Supabase 91KMEDW Link Pro agar tetap aktif (Healthy)..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: sb_publishable_UrZkAaE9ql7oMx-YEBCZ6A_ooRlQWks" \
+            -H "Authorization: Bearer sb_publishable_UrZkAaE9ql7oMx-YEBCZ6A_ooRlQWks" \
+            "https://hzraugtryqnykhgxnsmg.supabase.co/rest/v1/categories?select=id&limit=1")
+          echo "Status Respons Supabase: HTTP $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "SUKSES: Database Supabase aktif dan timer inaktivitas 7 hari telah di-reset!"
+          else
+            echo "PERINGATAN: Respons HTTP $HTTP_STATUS"
+            exit 1
+          fi
