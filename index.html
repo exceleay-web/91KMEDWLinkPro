@@ -3532,7 +3532,7 @@
                     <div class="landing-brand-text">
                         <span class="landing-brand-title" id="landingBrandTitle">91KMEDW <span
                                 class="neon-highlight">LINK PRO</span></span>
-                        <span class="landing-brand-sub" id="landingBrandSubtitle">PORTAL DIREKTORI RESMI</span>
+                        <span class="landing-brand-sub" id="landingBrandSubtitle">PORTAL APLIKASI &amp; DIREKTORI SISTEM</span>
                     </div>
                 </div>
                 <div class="landing-nav-actions">
@@ -3544,7 +3544,7 @@
                     <a href="#directorySection" class="btn btn-primary btn-sm" id="landingNavActionBtn"
                         style="text-decoration:none;">
                         <i class="fa-solid fa-compass"></i>
-                        <span id="landingNavActionText">Jelajahi Link</span>
+                        <span id="landingNavActionText">Jelajahi Proyek</span>
                     </a>
                 </div>
             </div>
@@ -3555,12 +3555,12 @@
             <div class="landing-hero-container">
                 <!-- FLOATING ANNOUNCEMENT CAPSULE HERO (OPSI A) -->
                 <div class="hero-announcement-capsule" id="landingHeroBadge"
-                    title="Klik untuk menjelajahi direktori tautan"
+                    title="Klik untuk menjelajahi direktori proyek"
                     onclick="document.getElementById('directorySection').scrollIntoView({behavior:'smooth'})">
                     <div class="capsule-tag" id="landingCapsuleTag">
                         <span class="ticker-pulse-dot"></span>
                         <i id="landingHeroBadgeIcon" class="fa-solid fa-bullhorn"></i>
-                        <span id="landingTickerBadge">INFO SISTEM</span>
+                        <span id="landingTickerBadge">INFO PORTAL</span>
                     </div>
                     <div class="capsule-track">
                         <div class="capsule-text" id="landingTickerContent">
@@ -3570,13 +3570,13 @@
                     <i class="fa-solid fa-arrow-right capsule-arrow"></i>
                 </div>
                 <h1 class="landing-hero-title" id="landingHeroTitle">
-                    <span id="landingHeroPrefixText">Pusat Navigasi &amp; Manajemen Link</span><br>
-                    <span class="hero-gradient-text" id="landingHeroHighlightText">91KMEDW Link Pro</span><span
+                    <span id="landingHeroPrefixText">Satu Pintu Akses untuk</span><br>
+                    <span class="hero-gradient-text" id="landingHeroHighlightText">Aplikasi Web &amp; Sistem Kerja</span><span
                         class="typing-cursor">|</span>
                 </h1>
                 <p class="landing-hero-desc" id="landingHeroDesc">
-                    Temukan seluruh tautan kerja, portal aplikasi, formulir online, dan dokumen operasional tim dalam
-                    satu antarmuka yang cepat, aman, dan mudah digunakan.
+                    Menghimpun berbagai aplikasi web, dashboard pemantauan, perangkat bantu kerja, dan landing page
+                    aktif dalam satu ruang yang tertata, ringan, dan siap diakses kapan saja.
                 </p>
 
                 <!-- HERO INSTANT LIVE SEARCH -->
@@ -3584,7 +3584,7 @@
                     <div class="hero-search-box">
                         <i class="fa-solid fa-magnifying-glass hero-search-icon"></i>
                         <input type="text" id="landingSearchInput" class="hero-search-input"
-                            placeholder="Cari judul link, aplikasi, dokumen, atau kata kunci... (Tekan Ctrl + K)"
+                            placeholder="Cari nama aplikasi, proyek, atau dokumen..."
                             oninput="handleLandingSearchDebounce()">
                         <span style="font-size:0.68rem; font-family:var(--font-mono); color:var(--text-muted); background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:5px; padding:2px 7px; margin-right:6px; white-space:nowrap; pointer-events:none;">Ctrl + K</span>
                         <button type="button" id="btnClearLandingSearch" class="hero-search-clear hidden"
@@ -3606,10 +3606,10 @@
                 <div>
                     <h2 class="directory-title" id="landingDirectoryHeading">
                         <i class="fa-solid fa-layer-group" style="color:var(--cyber-orange);"></i>
-                        <span id="landingDirectoryTitle">Direktori Tautan Publik</span>
+                        <span id="landingDirectoryTitle">Direktori Aplikasi &amp; Proyek</span>
                     </h2>
-                    <p class="directory-subtitle" id="landingDirectorySubtitle">Klik langsung untuk membuka tautan, atau
-                        gunakan filter kategori di bawah ini.</p>
+                    <p class="directory-subtitle" id="landingDirectorySubtitle">Pilih kategori di bawah atau klik kartu
+                        proyek untuk melihat pratinjau visual dan membuka tautan.</p>
                 </div>
                 <div>
                     <span id="publicLinkCounterBadge" class="count-pill">Memuat data...</span>
@@ -3632,7 +3632,7 @@
                     <span id="landingFooterBrand">Developed By 91KMEDW</span>
                 </div>
                 <div class="landing-footer-copy" id="landingFooterCopy">
-                    &copy; 2026 91KMEDW Link Pro &bull; Portal Tautan Publik &amp; Manajemen Terpadu
+                    &copy; 2026 91KMEDW Link Pro &bull; Ruang Akses Aplikasi &amp; Portofolio Sistem Terpadu
                 </div>
                 <button type="button" class="btn btn-glass btn-sm"
                     onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
@@ -5787,7 +5787,7 @@
                     HERO_TYPING_STATE.timer = null;
                 }
                 if (cursor) cursor.style.display = 'none';
-                target.textContent = (cfg && cfg.heroTitleHighlight) ? cfg.heroTitleHighlight : '91KMEDW Link Pro';
+                target.textContent = (cfg && cfg.heroTitleHighlight) ? cfg.heroTitleHighlight : 'Aplikasi Web & Sistem Kerja';
                 return;
             }
 
@@ -5803,10 +5803,10 @@
 
             if (wordsList.length === 0) {
                 wordsList = [
-                    (cfg && cfg.heroTitleHighlight && cfg.heroTitleHighlight.trim()) ? cfg.heroTitleHighlight.trim() : '91KMEDW Link Pro',
-                    'Portal Akses Cepat & Terpadu',
-                    'Direktori Kerja & Aplikasi Tim',
-                    'Satu Pintu Manajemen Dokumen'
+                    (cfg && cfg.heroTitleHighlight && cfg.heroTitleHighlight.trim()) ? cfg.heroTitleHighlight.trim() : 'Aplikasi Web & Sistem Kerja',
+                    'Dashboard Data & Pelaporan',
+                    'Otomatisasi Tugas Harian',
+                    'Ekosistem Digital 91KMEDW'
                 ];
             }
 
@@ -5815,7 +5815,7 @@
             // Jalankan siklus jika timer belum aktif
             if (!HERO_TYPING_STATE.timer) {
                 HERO_TYPING_STATE.wordIndex = 0;
-                var initialWord = HERO_TYPING_STATE.words[0] || '91KMEDW Link Pro';
+                var initialWord = HERO_TYPING_STATE.words[0] || 'Aplikasi Web & Sistem Kerja';
                 HERO_TYPING_STATE.charIndex = initialWord.length;
                 HERO_TYPING_STATE.isDeleting = false;
                 target.textContent = initialWord;
@@ -8728,33 +8728,33 @@
         var DEFAULT_LANDING_CONFIG = {
             brandTitleMain: "91KMEDW",
             brandTitleHighlight: "LINK PRO",
-            brandSubtitle: "PORTAL DIREKTORI RESMI",
-            navActionText: "Jelajahi Link",
+            brandSubtitle: "PORTAL APLIKASI & DIREKTORI SISTEM",
+            navActionText: "Jelajahi Proyek",
 
             tickerEnabled: true,
-            tickerBadgeText: "INFO SISTEM",
-            tickerText: "● SISTEM: Seluruh tautan beroperasi normal (Operational 100%) • Akses dokumen & aplikasi resmi",
+            tickerBadgeText: "INFO PORTAL",
+            tickerText: "● Seluruh sistem & aplikasi berjalan normal (100% Operational) • Klik kartu proyek untuk melihat pratinjau tampilan atau akses langsung",
 
-            heroBadgeText: "Direktori Resmi • Akses Terpusat 91KMEDW",
+            heroBadgeText: "91KMEDW • Ekosistem Aplikasi & Direktori Terpadu",
             heroBadgeIcon: "fa-shield-halved",
-            heroTitlePrefix: "Pusat Navigasi & Akses Cepat",
-            heroTitleHighlight: "91KMEDW Link Pro",
-            heroDescription: "Temukan seluruh tautan kerja, portal aplikasi, formulir online, dan dokumen operasional tim dalam satu antarmuka yang cepat, aman, dan mudah digunakan.",
-            heroSearchPlaceholder: "Cari judul link, aplikasi, dokumen, atau kata kunci...",
+            heroTitlePrefix: "Satu Pintu Akses untuk",
+            heroTitleHighlight: "Aplikasi Web & Sistem Kerja",
+            heroDescription: "Menghimpun berbagai aplikasi web, dashboard pemantauan, perangkat bantu kerja, dan landing page aktif dalam satu ruang yang tertata, ringan, dan siap diakses kapan saja.",
+            heroSearchPlaceholder: "Cari nama aplikasi, proyek, atau dokumen...",
 
             typingEnabled: true,
             typingWords: [
-                '91KMEDW Link Pro',
-                'Portal Akses Cepat & Terpadu',
-                'Direktori Kerja & Aplikasi Tim',
-                'Satu Pintu Manajemen Dokumen'
+                'Aplikasi Web & Sistem Kerja',
+                'Dashboard Data & Pelaporan',
+                'Otomatisasi Tugas Harian',
+                'Ekosistem Digital 91KMEDW'
             ],
 
-            directoryTitle: "Direktori Tautan Publik",
-            directorySubtitle: "Klik langsung untuk membuka tautan, atau gunakan filter kategori di bawah ini.",
+            directoryTitle: "Direktori Aplikasi & Proyek",
+            directorySubtitle: "Pilih kategori di bawah atau klik kartu proyek untuk melihat pratinjau visual dan membuka tautan.",
 
             footerBrandText: "Developed By 91KMEDW",
-            footerCopyrightText: "© 2026 91KMEDW Link Pro • Portal Tautan Publik & Manajemen Terpadu"
+            footerCopyrightText: "© 2026 91KMEDW Link Pro • Ruang Akses Aplikasi & Portofolio Sistem Terpadu"
         };
 
         function getEffectiveLandingConfig() {
@@ -8784,11 +8784,11 @@
             }
             var brandSub = document.getElementById('landingBrandSubtitle');
             if (brandSub) {
-                brandSub.textContent = cfg.brandSubtitle || 'PORTAL DIREKTORI RESMI';
+                brandSub.textContent = cfg.brandSubtitle || 'PORTAL APLIKASI & DIREKTORI SISTEM';
             }
             var navActText = document.getElementById('landingNavActionText');
             if (navActText) {
-                navActText.textContent = cfg.navActionText || 'Jelajahi Link';
+                navActText.textContent = cfg.navActionText || 'Jelajahi Proyek';
             }
 
             // Floating Announcement Capsule Hero (Opsi A)
@@ -8800,12 +8800,12 @@
             if (capsuleEl) {
                 if (cfg.tickerEnabled !== false) {
                     capsuleEl.style.display = 'inline-flex';
-                    if (tickerBadge) tickerBadge.textContent = cfg.tickerBadgeText || 'INFO SISTEM';
+                    if (tickerBadge) tickerBadge.textContent = cfg.tickerBadgeText || 'INFO PORTAL';
                     if (badgeIcon) {
                         badgeIcon.className = 'fa-solid ' + (cfg.heroBadgeIcon || 'fa-bullhorn');
                     }
                     if (tickerContent) {
-                        var safeText = escapeHtml(cfg.tickerText || '● SISTEM: Seluruh tautan beroperasi normal (Operational 100%) • Akses dokumen & aplikasi resmi');
+                        var safeText = escapeHtml(cfg.tickerText || '● Seluruh sistem & aplikasi berjalan normal (100% Operational) • Klik kartu proyek untuk melihat pratinjau tampilan atau akses langsung');
                         tickerContent.style.animation = 'capsuleScroll 22s linear infinite';
                         tickerContent.innerHTML =
                             '<span class="capsule-segment">' + safeText + '</span>' +
@@ -8820,7 +8820,7 @@
                     if (badgeIcon) badgeIcon.className = 'fa-solid fa-shield-halved';
                     if (tickerContent) {
                         tickerContent.style.animation = 'none';
-                        tickerContent.innerHTML = '<span class="capsule-segment" style="color:var(--text-secondary);">' + escapeHtml(cfg.heroBadgeText || 'Direktori Resmi • Akses Terpusat 91KMEDW') + '</span>';
+                        tickerContent.innerHTML = '<span class="capsule-segment" style="color:var(--text-secondary);">' + escapeHtml(cfg.heroBadgeText || '91KMEDW • Ekosistem Aplikasi & Direktori Terpadu') + '</span>';
                     }
                 }
             }
@@ -8828,7 +8828,7 @@
             // Hero Section
             var badgeText = document.getElementById('landingHeroBadgeText');
             if (badgeText) {
-                badgeText.textContent = cfg.heroBadgeText || 'Direktori Resmi • Akses Terpusat 91KMEDW';
+                badgeText.textContent = cfg.heroBadgeText || '91KMEDW • Ekosistem Aplikasi & Direktori Terpadu';
             }
             var badgeIcon = document.getElementById('landingHeroBadgeIcon');
             if (badgeIcon && cfg.heroBadgeIcon) {
@@ -8838,10 +8838,10 @@
             if (heroTitle) {
                 var prefixEl = document.getElementById('landingHeroPrefixText');
                 if (prefixEl) {
-                    prefixEl.textContent = cfg.heroTitlePrefix || 'Pusat Navigasi & Manajemen Link';
+                    prefixEl.textContent = cfg.heroTitlePrefix || 'Satu Pintu Akses untuk';
                 } else {
-                    heroTitle.innerHTML = '<span id="landingHeroPrefixText">' + escapeHtml(cfg.heroTitlePrefix || 'Pusat Navigasi & Manajemen Link') + '</span><br>' +
-                        '<span class="hero-gradient-text" id="landingHeroHighlightText">' + escapeHtml(cfg.heroTitleHighlight || '91KMEDW Link Pro') + '</span><span class="typing-cursor">|</span>';
+                    heroTitle.innerHTML = '<span id="landingHeroPrefixText">' + escapeHtml(cfg.heroTitlePrefix || 'Satu Pintu Akses untuk') + '</span><br>' +
+                        '<span class="hero-gradient-text" id="landingHeroHighlightText">' + escapeHtml(cfg.heroTitleHighlight || 'Aplikasi Web & Sistem Kerja') + '</span><span class="typing-cursor">|</span>';
                 }
                 syncHeroTypingConfig(cfg);
             }
@@ -8851,20 +8851,20 @@
             }
             var searchInp = document.getElementById('landingSearchInput');
             if (searchInp) {
-                searchInp.placeholder = cfg.heroSearchPlaceholder || 'Cari judul link, aplikasi, dokumen, atau kata kunci...';
+                searchInp.placeholder = cfg.heroSearchPlaceholder || 'Cari nama aplikasi, proyek, atau dokumen...';
             }
 
             // Directory Section
             var dirTitle = document.getElementById('landingDirectoryTitle');
-            if (dirTitle) dirTitle.textContent = cfg.directoryTitle || 'Direktori Tautan Publik';
+            if (dirTitle) dirTitle.textContent = cfg.directoryTitle || 'Direktori Aplikasi & Proyek';
             var dirSub = document.getElementById('landingDirectorySubtitle');
-            if (dirSub) dirSub.textContent = cfg.directorySubtitle || 'Klik langsung untuk membuka tautan, atau gunakan filter kategori di bawah ini.';
+            if (dirSub) dirSub.textContent = cfg.directorySubtitle || 'Pilih kategori di bawah atau klik kartu proyek untuk melihat pratinjau visual dan membuka tautan.';
 
             // Footer
             var footBrand = document.getElementById('landingFooterBrand');
             if (footBrand) footBrand.textContent = cfg.footerBrandText || 'Developed By 91KMEDW';
             var footCopy = document.getElementById('landingFooterCopy');
-            if (footCopy) footCopy.textContent = cfg.footerCopyrightText || '© 2026 91KMEDW Link Pro • Portal Tautan Publik & Manajemen Terpadu';
+            if (footCopy) footCopy.textContent = cfg.footerCopyrightText || '© 2026 91KMEDW Link Pro • Ruang Akses Aplikasi & Portofolio Sistem Terpadu';
         }
 
         function handleFeatureCardClick(cardIndex) {
