@@ -3304,8 +3304,9 @@
                     <div class="hero-search-box">
                         <i class="fa-solid fa-magnifying-glass hero-search-icon"></i>
                         <input type="text" id="landingSearchInput" class="hero-search-input"
-                            placeholder="Cari judul link, aplikasi, dokumen, atau kata kunci..."
+                            placeholder="Cari judul link, aplikasi, dokumen, atau kata kunci... (Tekan Ctrl + K)"
                             oninput="handleLandingSearchDebounce()">
+                        <span style="font-size:0.68rem; font-family:var(--font-mono); color:var(--text-muted); background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:5px; padding:2px 7px; margin-right:6px; white-space:nowrap; pointer-events:none;">Ctrl + K</span>
                         <button type="button" id="btnClearLandingSearch" class="hero-search-clear hidden"
                             onclick="clearLandingSearch()" title="Hapus Pencarian">
                             <i class="fa-solid fa-xmark"></i>
@@ -3479,6 +3480,12 @@
                         <span class="nav-item-title">Ganti Password</span>
                     </div>
                 </div>
+                <div class="nav-item" onclick="openBackupDataModal()" title="Backup & Export Database Link">
+                    <div class="nav-item-left">
+                        <i class="fa-solid fa-file-export" style="color: var(--neon-green, #00ffaa);"></i>
+                        <span class="nav-item-title">Backup &amp; Export</span>
+                    </div>
+                </div>
             </div>
 
             <div class="sidebar-section-header">
@@ -3547,6 +3554,11 @@
                         title="Ganti Password Admin">
                         <i class="fa-solid fa-key" style="color: var(--accent-cyan, #06b6d4);"></i>
                         <span>Ganti Password</span>
+                    </button>
+                    <button type="button" class="btn btn-glass" onclick="openBackupDataModal()"
+                        title="Backup & Export Data ke JSON / Excel CSV">
+                        <i class="fa-solid fa-file-export" style="color: var(--neon-green, #00ffaa);"></i>
+                        <span>Backup Data</span>
                     </button>
                     <button type="button" id="btnThemeToggle" class="btn btn-glass" onclick="toggleAppTheme()"
                         title="Ganti Mode Terang / Gelap">
@@ -3744,13 +3756,25 @@
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-top: 14px;">
-                    <label class="form-label" for="formLinkVisibilitas">Visibilitas Tautan ke Publik</label>
-                    <select id="formLinkVisibilitas" class="form-control">
-                        <option value="Tampil">Tampilkan di Publik (Normal / Bebas)</option>
-                        <option value="Restricted">🔒 Akses Terbatas (Wajib Kunci PIN)</option>
-                        <option value="Hidden">Sembunyikan dari Publik (Hide / Draft)</option>
-                    </select>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="formLinkVisibilitas">Visibilitas Tautan</label>
+                        <select id="formLinkVisibilitas" class="form-control">
+                            <option value="Tampil">🌐 Publik (Normal)</option>
+                            <option value="Restricted">🔒 Akses Terbatas (PIN)</option>
+                            <option value="Hidden">👁️‍🗨️ Sembunyikan (Draft)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="formLinkLabelStatus">Label Status Aplikasi</label>
+                        <select id="formLinkLabelStatus" class="form-control">
+                            <option value="Aktif">🟢 Online / Aktif</option>
+                            <option value="Baru">🔥 Baru (New Release)</option>
+                            <option value="Unggulan">⭐ Unggulan (Featured)</option>
+                            <option value="Beta">🧪 Versi Beta</option>
+                            <option value="Maintenance">🛠️ Maintenance (Perbaikan)</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="modal-footer">
@@ -4286,6 +4310,79 @@
         </div>
     </div>
 
+    <!-- ========================================================================
+       8. MODAL GENERATOR QR CODE INSTAN
+       ======================================================================== -->
+    <div id="qrCodeModal" class="modal-backdrop hidden">
+        <div class="modal-dialog" style="max-width: 400px; text-align: center;">
+            <div class="modal-header">
+                <div class="modal-title"
+                    style="color: var(--accent-cyan, #06b6d4); display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-qrcode"></i>
+                    <span>QR Code Tautan Cepat</span>
+                </div>
+                <button type="button" class="action-icon-btn" onclick="closeQrCodeModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div style="padding: 14px 8px;">
+                <div id="qrModalLinkTitle" style="font-size: 1.05rem; font-weight: 800; color: #fff; margin-bottom: 4px;">Judul Link</div>
+                <div id="qrModalLinkUrl" style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-muted); word-break: break-all; margin-bottom: 16px;">https://...</div>
+                <div style="background: #ffffff; padding: 16px; border-radius: 16px; display: inline-block; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 16px;">
+                    <img id="qrModalImage" src="" alt="QR Code" style="width: 220px; height: 220px; display: block;">
+                </div>
+                <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 16px;">
+                    Arahkan kamera HP / QR Scanner untuk langsung membuka tautan ini.
+                </p>
+                <div class="modal-footer" style="justify-content: center; gap: 10px;">
+                    <button type="button" class="btn btn-glass" onclick="closeQrCodeModal()">Tutup</button>
+                    <button type="button" id="btnDownloadQrPng" class="btn btn-primary" onclick="downloadQrCodePng()">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Unduh QR (.PNG)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================
+       9. MODAL BACKUP & EXPORT DATABASE 1-KLIK (JSON & EXCEL CSV)
+       ======================================================================== -->
+    <div id="backupDataModal" class="modal-backdrop hidden">
+        <div class="modal-dialog" style="max-width: 460px;">
+            <div class="modal-header">
+                <div class="modal-title"
+                    style="color: var(--neon-green, #00ffaa); display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-file-export"></i>
+                    <span>Backup &amp; Export Database</span>
+                </div>
+                <button type="button" class="action-icon-btn" onclick="closeBackupDataModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div style="padding: 12px 6px;">
+                <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
+                    Unduh salinan lengkap seluruh data tautan, kategori, statistik klik, dan konfigurasi portal dari Supabase Cloud ke komputer Anda.
+                </p>
+                <div id="backupStatsSummary" style="background: rgba(255,255,255,0.03); border: 1px dashed var(--border-tech); border-radius: 10px; padding: 14px; margin-bottom: 18px; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.7;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px;">
+                    <button type="button" class="btn btn-primary" style="width: 100%; justify-content: center; height: 42px;" onclick="exportBackupCsv()">
+                        <i class="fa-solid fa-file-csv" style="font-size: 1rem;"></i>
+                        <span>Unduh Tabel Excel (.CSV)</span>
+                    </button>
+                    <button type="button" class="btn btn-glass" style="width: 100%; justify-content: center; height: 42px; border-color: rgba(0, 255, 170, 0.4); color: var(--neon-green);" onclick="exportBackupJson()">
+                        <i class="fa-solid fa-file-code" style="font-size: 1rem;"></i>
+                        <span>Unduh Full Snapshot Database (.JSON)</span>
+                    </button>
+                </div>
+                <div class="modal-footer" style="padding-top: 8px;">
+                    <button type="button" class="btn btn-glass" onclick="closeBackupDataModal()">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         /**
          * ==========================================================================
@@ -4365,6 +4462,8 @@
                                     statusPin: l.status_pin || 'Normal',
                                     urutan: parseInt(l.urutan) || 1,
                                     visibilitas: l.visibilitas || 'Tampil',
+                                    clickCount: parseInt(l.click_count) || 0,
+                                    labelStatus: l.label_status || 'Aktif',
                                     updatedAt: l.updated_at || ''
                                 };
                             });
@@ -4493,6 +4592,7 @@
                         status_pin: String(payload.statusPin || 'Normal').trim(),
                         urutan: parseInt(payload.urutan) || 1,
                         visibilitas: String(payload.visibilitas || 'Tampil').trim(),
+                        label_status: String(payload.labelStatus || 'Aktif').trim(),
                         updated_at: new Date().toISOString()
                     };
 
@@ -5451,6 +5551,229 @@
         }
 
         /**
+         * ==========================================================================
+         * 5 FITUR ENTERPRISE TAMBAHAN:
+         * 1. Click Counter & Analytics (trackLinkClick)
+         * 2. Label Status Aplikasi (renderStatusLabelBadge & Maintenance Guard)
+         * 3. Generator QR Code Otomatis (openQrCodeModal & downloadQrCodePng)
+         * 4. Backup & Export 1-Klik JSON / Excel CSV (openBackupDataModal)
+         * 5. Bagikan Cepat ke WhatsApp & Shortcut Pencarian Ctrl + K
+         * ==========================================================================
+         */
+        function renderStatusLabelBadge(labelStatus) {
+            var st = String(labelStatus || 'Aktif').trim();
+            if (st === 'Baru') {
+                return '<span class="pin-badge" style="background:rgba(16,185,129,0.16); border-color:rgba(16,185,129,0.45); color:#34d399;"><i class="fa-solid fa-fire"></i> Baru</span>';
+            }
+            if (st === 'Unggulan') {
+                return '<span class="pin-badge" style="background:rgba(245,158,11,0.16); border-color:rgba(245,158,11,0.45); color:#fbbf24;"><i class="fa-solid fa-star"></i> Unggulan</span>';
+            }
+            if (st === 'Beta') {
+                return '<span class="pin-badge" style="background:rgba(168,85,247,0.16); border-color:rgba(168,85,247,0.45); color:#c084fc;"><i class="fa-solid fa-flask"></i> Beta</span>';
+            }
+            if (st === 'Maintenance') {
+                return '<span class="pin-badge" style="background:rgba(244,63,94,0.16); border-color:rgba(244,63,94,0.45); color:#fda4af;"><i class="fa-solid fa-screwdriver-wrench"></i> Maintenance</span>';
+            }
+            return '';
+        }
+
+        function trackLinkClick(linkId) {
+            if (!linkId) return;
+            var item = findLinkById(linkId);
+            if (item) {
+                item.clickCount = (parseInt(item.clickCount, 10) || 0) + 1;
+                var badges = document.querySelectorAll('[data-click-id="' + linkId + '"]');
+                for (var i = 0; i < badges.length; i++) {
+                    badges[i].innerHTML = '<i class="fa-solid fa-chart-simple" style="color:var(--accent-cyan);"></i> ' + item.clickCount + 'x';
+                }
+            }
+            supabaseFetch('rpc/increment_link_click', {
+                method: 'POST',
+                body: JSON.stringify({ target_link_id: String(linkId) })
+            }).catch(function () { });
+        }
+
+        function handlePublicLinkClick(ev, linkId) {
+            var item = findLinkById(linkId);
+            if (item && item.labelStatus === 'Maintenance') {
+                if (ev) ev.preventDefault();
+                showToast('🛠️ Mohon maaf, "' + item.judul + '" sedang dalam pemeliharaan (Maintenance). Silakan coba beberapa saat lagi.', 'warning');
+                return false;
+            }
+            trackLinkClick(linkId);
+            return true;
+        }
+
+        var CURRENT_QR_TARGET = null;
+
+        function openQrCodeModal(linkId) {
+            var item = findLinkById(linkId);
+            if (!item || !item.url || item.url === '#') {
+                showToast('Tautan ini tidak memiliki URL tujuan.', 'error');
+                return;
+            }
+            if (!APP_STATE.user && item.visibilitas === 'Restricted') {
+                showToast('Tautan ini diproteksi PIN Akses Terbatas.', 'warning');
+                openRestrictedPinModal(linkId);
+                return;
+            }
+            CURRENT_QR_TARGET = item;
+            var titleEl = document.getElementById('qrModalLinkTitle');
+            var urlEl = document.getElementById('qrModalLinkUrl');
+            var imgEl = document.getElementById('qrModalImage');
+            if (titleEl) titleEl.textContent = item.judul || 'Tautan';
+            if (urlEl) urlEl.textContent = item.url;
+            if (imgEl) {
+                imgEl.src = 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=10&data=' + encodeURIComponent(item.url);
+            }
+            var modal = document.getElementById('qrCodeModal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeQrCodeModal() {
+            var modal = document.getElementById('qrCodeModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function downloadQrCodePng() {
+            if (!CURRENT_QR_TARGET || !CURRENT_QR_TARGET.url) return;
+            var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=16&data=' + encodeURIComponent(CURRENT_QR_TARGET.url);
+            var safeName = String(CURRENT_QR_TARGET.judul || 'QR-Link').replace(/[^a-zA-Z0-9_-]/g, '_');
+            fetch(qrUrl)
+                .then(function (r) { return r.blob(); })
+                .then(function (blob) {
+                    var blobUrl = URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = 'QR_' + safeName + '.png';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(blobUrl);
+                    showToast('Gambar QR Code berhasil diunduh!', 'success');
+                })
+                .catch(function () {
+                    window.open(qrUrl, '_blank', 'noopener,noreferrer');
+                });
+        }
+
+        function shareLinkWhatsApp(linkId) {
+            var item = findLinkById(linkId);
+            if (!item || !item.url || item.url === '#') {
+                showToast('Tautan ini tidak memiliki URL untuk dibagikan.', 'error');
+                return;
+            }
+            if (!APP_STATE.user && item.visibilitas === 'Restricted') {
+                showToast('Tautan terbatas tidak dapat dibagikan secara langsung.', 'warning');
+                return;
+            }
+            var text = '*' + (item.judul || 'Tautan 91KMEDW') + '*\n';
+            if (item.deskripsi) {
+                text += item.deskripsi + '\n';
+            }
+            text += '🔗 ' + item.url;
+            var waUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(text);
+            window.open(waUrl, '_blank', 'noopener,noreferrer');
+        }
+
+        function openBackupDataModal() {
+            var modal = document.getElementById('backupDataModal');
+            var summaryEl = document.getElementById('backupStatsSummary');
+            if (summaryEl) {
+                var totalCats = APP_STATE.categories.length;
+                var totalLinks = APP_STATE.links.length;
+                var totalClicks = 0;
+                for (var i = 0; i < APP_STATE.links.length; i++) {
+                    totalClicks += (parseInt(APP_STATE.links[i].clickCount, 10) || 0);
+                }
+                summaryEl.innerHTML =
+                    '<div><i class="fa-solid fa-tags" style="color:var(--accent-cyan); width:20px;"></i> Total Kategori: <strong style="color:#fff;">' + totalCats + ' Kategori</strong></div>' +
+                    '<div><i class="fa-solid fa-link" style="color:var(--neon-green); width:20px;"></i> Total Tautan: <strong style="color:#fff;">' + totalLinks + ' Tautan (Lv.1, Lv.2, Lv.3)</strong></div>' +
+                    '<div><i class="fa-solid fa-chart-simple" style="color:var(--cyber-orange); width:20px;"></i> Total Akumulasi Klik: <strong style="color:#fff;">' + totalClicks + ' Klik</strong></div>';
+            }
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeBackupDataModal() {
+            var modal = document.getElementById('backupDataModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function exportBackupJson() {
+            var dStr = new Date().toISOString().slice(0, 10);
+            var backupObj = {
+                exportedAt: new Date().toISOString(),
+                system: '91KMEDW Link Pro v5.9',
+                categories: APP_STATE.categories,
+                links: APP_STATE.links,
+                landingConfig: APP_STATE.landingConfig
+            };
+            var blob = new Blob([JSON.stringify(backupObj, null, 2)], { type: 'application/json;charset=utf-8' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'Backup_91KMEDW_LinkPro_' + dStr + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Full Backup JSON berhasil diunduh!', 'success');
+        }
+
+        function exportBackupCsv() {
+            var dStr = new Date().toISOString().slice(0, 10);
+            var headers = ['ID', 'Level', 'Kategori', 'Parent_ID', 'Judul', 'URL', 'Deskripsi', 'Status_Pin', 'Visibilitas', 'Label_Status', 'Jumlah_Klik', 'Urutan'];
+            var rows = [headers.join(',')];
+            for (var i = 0; i < APP_STATE.links.length; i++) {
+                var l = APP_STATE.links[i];
+                var cat = getCategoryById(l.categoryId);
+                var cols = [
+                    l.id || '',
+                    l.level || 1,
+                    cat ? cat.nama : (l.categoryId || ''),
+                    l.parentId || '',
+                    l.judul || '',
+                    l.url || '',
+                    l.deskripsi || '',
+                    l.statusPin || 'Normal',
+                    l.visibilitas || 'Tampil',
+                    l.labelStatus || 'Aktif',
+                    l.clickCount || 0,
+                    l.urutan || 1
+                ].map(function (val) {
+                    return '"' + String(val).replace(/"/g, '""') + '"';
+                });
+                rows.push(cols.join(','));
+            }
+            var csvContent = '\uFEFF' + rows.join('\r\n');
+            var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'Data_Tautan_91KMEDW_' + dStr + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('File Tabel Excel (.CSV) berhasil diunduh!', 'success');
+        }
+
+        // Global Keyboard Shortcut Ctrl + K untuk Fokus Pencarian Cepat
+        window.addEventListener('keydown', function (e) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+                e.preventDefault();
+                var appViewEl = document.getElementById('appView');
+                var isDashboardActive = (appViewEl && !appViewEl.classList.contains('hidden'));
+                var targetInput = document.getElementById(isDashboardActive ? 'searchInput' : 'landingSearchInput');
+                if (targetInput) {
+                    targetInput.focus();
+                    targetInput.select();
+                    targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        });
+
+        /**
          * HELPER CUSTOM TOAST NOTIFICATION
          */
         function showToast(message, type) {
@@ -5908,12 +6231,14 @@
                     '              <span>' + escapeHtml(catObj.nama) + '</span>' +
                     '            </span>' +
                     (isPinned ? '    <span class="pin-badge"><i class="fa-solid fa-thumbtack"></i> Pinned</span>' : '') +
+                    renderStatusLabelBadge(mLink.labelStatus) +
                     (isRestricted ? '    <span class="count-pill" style="color:var(--accent-orange, #f97316); border-color:rgba(249,115,22,0.3); background:rgba(249,115,22,0.1);"><i class="fa-solid fa-lock"></i> Terbatas</span>' : '') +
                     (isHidden ? '    <span class="count-pill" style="color:var(--text-muted); border-color:rgba(255,255,255,0.12);"><i class="fa-solid fa-eye-slash"></i> Hidden</span>' : '') +
+                    '            <span class="count-pill" data-click-id="' + mId + '" title="Total Klik"><i class="fa-solid fa-chart-simple" style="color:var(--accent-cyan);"></i> ' + (parseInt(mLink.clickCount, 10) || 0) + 'x</span>' +
                     '            <span class="count-pill"><i class="fa-solid fa-network-wired"></i> ' + childSubs.length + ' Sub &bull; ' + totalGrandChildren + ' Endpoints</span>' +
                     '          </div>' +
                     (hasUrl ?
-                        '          <a href="' + sanitizeUrl(mLink.url) + '" target="_blank" rel="noopener noreferrer" class="link-title-anchor">' +
+                        '          <a href="' + sanitizeUrl(mLink.url) + '" target="_blank" rel="noopener noreferrer" class="link-title-anchor" onclick="trackLinkClick(\'' + mId + '\')">' +
                         '            <span>' + escapeHtml(mLink.judul) + '</span>' +
                         '            <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.75rem; opacity:0.7;"></i>' +
                         '          </a>' +
@@ -5941,6 +6266,12 @@
                     (hasUrl ?
                         '        <button type="button" class="action-icon-btn" onclick="copyLinkUrl(\'' + mId + '\')" title="Salin URL">' +
                         '          <i class="fa-regular fa-copy"></i>' +
+                        '        </button>' +
+                        '        <button type="button" class="action-icon-btn" onclick="openQrCodeModal(\'' + mId + '\')" title="Tampilkan QR Code">' +
+                        '          <i class="fa-solid fa-qrcode" style="color:var(--accent-cyan);"></i>' +
+                        '        </button>' +
+                        '        <button type="button" class="action-icon-btn" onclick="shareLinkWhatsApp(\'' + mId + '\')" title="Bagikan ke WhatsApp">' +
+                        '          <i class="fa-brands fa-whatsapp" style="color:#22c55e;"></i>' +
                         '        </button>' : '') +
                     '        <button type="button" class="action-icon-btn ' + (isPinned ? 'active-pin' : '') + '" onclick="handleTogglePin(\'' + mId + '\')" title="Sematkan ke Atas">' +
                     '          <i class="fa-solid fa-thumbtack"></i>' +
@@ -6001,11 +6332,13 @@
                                 '        <div class="node-info">' +
                                 '          <div class="node-meta-row">' +
                                 '            <span class="level-badge level-2-badge"><i class="fa-solid fa-gear"></i> Process Node</span>' +
+                                renderStatusLabelBadge(sLink.labelStatus) +
                                 (isSubRestricted ? '            <span class="count-pill" style="color:var(--accent-orange, #f97316); border-color:rgba(249,115,22,0.3); background:rgba(249,115,22,0.1);"><i class="fa-solid fa-lock"></i> Terbatas</span>' : '') +
                                 (isSubHidden ? '            <span class="count-pill" style="color:var(--text-muted); border-color:rgba(255,255,255,0.12);"><i class="fa-solid fa-eye-slash"></i> Hidden</span>' : '') +
+                                '            <span class="count-pill" data-click-id="' + sId + '" title="Total Klik"><i class="fa-solid fa-chart-simple" style="color:var(--accent-cyan);"></i> ' + (parseInt(sLink.clickCount, 10) || 0) + 'x</span>' +
                                 '            <span class="count-pill">' + childSubSubs.length + ' Endpoints</span>' +
                                 '          </div>' +
-                                '          <a href="' + sanitizeUrl(sLink.url) + '" target="_blank" rel="noopener noreferrer" class="link-title-anchor" style="font-size:0.95rem;">' +
+                                '          <a href="' + sanitizeUrl(sLink.url) + '" target="_blank" rel="noopener noreferrer" class="link-title-anchor" style="font-size:0.95rem;" onclick="trackLinkClick(\'' + sId + '\')">' +
                                 '            <span>' + escapeHtml(sLink.judul) + '</span>' +
                                 '            <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.7rem; opacity:0.7;"></i>' +
                                 '          </a>' +
@@ -6026,6 +6359,12 @@
                                 '        </button>' +
                                 '        <button type="button" class="action-icon-btn" onclick="copyLinkUrl(\'' + sId + '\')" title="Salin URL">' +
                                 '          <i class="fa-regular fa-copy"></i>' +
+                                '        </button>' +
+                                '        <button type="button" class="action-icon-btn" onclick="openQrCodeModal(\'' + sId + '\')" title="Tampilkan QR Code">' +
+                                '          <i class="fa-solid fa-qrcode" style="color:var(--accent-cyan);"></i>' +
+                                '        </button>' +
+                                '        <button type="button" class="action-icon-btn" onclick="shareLinkWhatsApp(\'' + sId + '\')" title="Bagikan ke WhatsApp">' +
+                                '          <i class="fa-brands fa-whatsapp" style="color:#22c55e;"></i>' +
                                 '        </button>' +
                                 '        <button type="button" class="action-icon-btn ' + (isSubRestricted ? 'active-lock' : '') + '" onclick="handleToggleRestricted(\'' + sId + '\')" title="' + (isSubRestricted ? 'Akses Terbatas Aktif (Wajib PIN) - Klik untuk Buka Kunci' : 'Kunci Akses (Wajib PIN)') + '">' +
                                 '          <i class="fa-solid ' + (isSubRestricted ? 'fa-lock' : 'fa-lock-open') + '" style="color:' + (isSubRestricted ? 'var(--cyber-orange, #f97316)' : 'var(--text-muted)') + ';"></i>' +
@@ -6068,14 +6407,16 @@
                                         '        <div class="node-info">' +
                                         '          <div class="node-meta-row">' +
                                         '            <span class="level-badge level-3-badge"><i class="fa-solid fa-circle-nodes"></i> Endpoint</span>' +
+                                        renderStatusLabelBadge(gLink.labelStatus) +
                                         (isGrandRestricted ? '            <span class="count-pill" style="color:var(--accent-orange, #f97316); border-color:rgba(249,115,22,0.3); background:rgba(249,115,22,0.1);"><i class="fa-solid fa-lock"></i> Terbatas</span>' : '') +
                                         (isGrandHidden ? '            <span class="count-pill" style="color:var(--text-muted); border-color:rgba(255,255,255,0.12);"><i class="fa-solid fa-eye-slash"></i> Hidden</span>' : '') +
+                                        '            <span class="count-pill" data-click-id="' + gId + '" title="Total Klik"><i class="fa-solid fa-chart-simple" style="color:var(--accent-cyan);"></i> ' + (parseInt(gLink.clickCount, 10) || 0) + 'x</span>' +
                                         '            <div class="status-indicator-badge">' +
                                         '              <span class="status-pulse-dot"></span>' +
                                         '              <span>' + eStatus + '</span>' +
                                         '            </div>' +
                                         '          </div>' +
-                                        '          <a href="' + sanitizeUrl(gLink.url) + '" target="_blank" rel="noopener noreferrer" class="link-title-anchor" style="font-size:0.9rem;">' +
+                                        '          <a href="' + sanitizeUrl(gLink.url) + '" target="_blank" rel="noopener noreferrer" class="link-title-anchor" style="font-size:0.9rem;" onclick="trackLinkClick(\'' + gId + '\')">' +
                                         '            <span>' + escapeHtml(gLink.judul) + '</span>' +
                                         '            <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.68rem; opacity:0.7;"></i>' +
                                         '          </a>' +
@@ -6091,11 +6432,17 @@
                                             '        <button type="button" class="action-icon-btn' + (isGLast ? ' disabled' : '') + '" ' + (isGLast ? 'disabled' : 'onclick="handleMoveLinkOrder(\'' + gId + '\', \'DOWN\')"') + ' title="' + (isGLast ? 'Posisi sudah terbawah' : 'Pindah Urutan Turun') + '">' +
                                             '          <i class="fa-solid fa-arrow-down"></i>' +
                                             '        </button>' : '') +
-                                        '        <a href="' + sanitizeUrl(gLink.url) + '" target="_blank" rel="noopener noreferrer" class="btn-direct-open" title="Buka Tautan Langsung">' +
+                                        '        <a href="' + sanitizeUrl(gLink.url) + '" target="_blank" rel="noopener noreferrer" class="btn-direct-open" title="Buka Tautan Langsung" onclick="trackLinkClick(\'' + gId + '\')">' +
                                         '          <i class="fa-solid fa-arrow-up-right-from-square"></i> <span>Akses</span>' +
                                         '        </a>' +
                                         '        <button type="button" class="action-icon-btn" onclick="copyLinkUrl(\'' + gId + '\')" title="Salin URL">' +
                                         '          <i class="fa-regular fa-copy"></i>' +
+                                        '        </button>' +
+                                        '        <button type="button" class="action-icon-btn" onclick="openQrCodeModal(\'' + gId + '\')" title="Tampilkan QR Code">' +
+                                        '          <i class="fa-solid fa-qrcode" style="color:var(--accent-cyan);"></i>' +
+                                        '        </button>' +
+                                        '        <button type="button" class="action-icon-btn" onclick="shareLinkWhatsApp(\'' + gId + '\')" title="Bagikan ke WhatsApp">' +
+                                        '          <i class="fa-brands fa-whatsapp" style="color:#22c55e;"></i>' +
                                         '        </button>' +
                                         '        <button type="button" class="action-icon-btn ' + (isGrandRestricted ? 'active-lock' : '') + '" onclick="handleToggleRestricted(\'' + gId + '\')" title="' + (isGrandRestricted ? 'Akses Terbatas Aktif (Wajib PIN) - Klik untuk Buka Kunci' : 'Kunci Akses (Wajib PIN)') + '">' +
                                         '          <i class="fa-solid ' + (isGrandRestricted ? 'fa-lock' : 'fa-lock-open') + '" style="color:' + (isGrandRestricted ? 'var(--cyber-orange, #f97316)' : 'var(--text-muted)') + ';"></i>' +
@@ -6259,6 +6606,8 @@
             document.getElementById('formLinkPin').value = 'Normal';
             var visSelect = document.getElementById('formLinkVisibilitas');
             if (visSelect) visSelect.value = 'Tampil';
+            var lblStatusSelect = document.getElementById('formLinkLabelStatus');
+            if (lblStatusSelect) lblStatusSelect.value = 'Aktif';
 
             var catSelect = document.getElementById('formLinkCategory');
             if (defaultCategoryId) {
@@ -6332,6 +6681,8 @@
             document.getElementById('formLinkPin').value = item.statusPin || 'Normal';
             var visEditSelect = document.getElementById('formLinkVisibilitas');
             if (visEditSelect) visEditSelect.value = (item.visibilitas === 'Hidden') ? 'Hidden' : ((item.visibilitas === 'Restricted') ? 'Restricted' : 'Tampil');
+            var lblStatusEdit = document.getElementById('formLinkLabelStatus');
+            if (lblStatusEdit) lblStatusEdit.value = item.labelStatus || 'Aktif';
 
             var isMain = (parseInt(item.level, 10) === 1);
             var lblUrl = document.getElementById('lblFormLinkUrl');
@@ -6394,6 +6745,7 @@
             var orderVal = parseInt(document.getElementById('formLinkOrder').value || '1', 10) || 1;
             var pinVal = String(document.getElementById('formLinkPin').value || 'Normal').trim();
             var visVal = String((document.getElementById('formLinkVisibilitas') ? document.getElementById('formLinkVisibilitas').value : 'Tampil') || 'Tampil').trim();
+            var labelStatusVal = String((document.getElementById('formLinkLabelStatus') ? document.getElementById('formLinkLabelStatus').value : 'Aktif') || 'Aktif').trim();
 
             if (!judulVal) {
                 showToast('Judul Tautan / Link wajib diisi.', 'error');
@@ -6413,6 +6765,7 @@
             }
 
             var isEdit = Boolean(idVal);
+            var existingItem = isEdit ? findLinkById(idVal) : null;
             var tempId = idVal || ('LNK-TEMP-' + new Date().getTime());
 
             var optimisticObj = {
@@ -6426,6 +6779,8 @@
                 statusPin: pinVal,
                 urutan: orderVal,
                 visibilitas: visVal,
+                labelStatus: labelStatusVal,
+                clickCount: existingItem ? (parseInt(existingItem.clickCount, 10) || 0) : 0,
                 updatedAt: 'Baru saja'
             };
 
@@ -6465,7 +6820,8 @@
                 deskripsi: descVal,
                 statusPin: pinVal,
                 urutan: orderVal,
-                visibilitas: visVal
+                visibilitas: visVal,
+                labelStatus: labelStatusVal
             };
 
             if (typeof google !== 'undefined' && google.script && google.script.run) {
@@ -6652,6 +7008,9 @@
                 setTimeout(function () {
                     var targetUrl = ACTIVE_RESTRICTED_TARGET ? String(ACTIVE_RESTRICTED_TARGET.url || '').trim() : '';
                     var targetTitle = ACTIVE_RESTRICTED_TARGET ? ACTIVE_RESTRICTED_TARGET.judul : '';
+                    if (ACTIVE_RESTRICTED_TARGET && ACTIVE_RESTRICTED_TARGET.id) {
+                        trackLinkClick(ACTIVE_RESTRICTED_TARGET.id);
+                    }
                     closeRestrictedPinModal();
                     showToast('PIN Valid! Membuka ' + targetTitle + '...', 'success');
                     if (targetUrl && /^(https?:\/\/|mailto:|tel:)/i.test(targetUrl)) {
@@ -7441,8 +7800,9 @@
                     '      <span>' + escapeHtml(catM.nama) + '</span>' +
                     '    </span>' +
                     (isPinned ? '    <span class="pin-badge"><i class="fa-solid fa-thumbtack"></i> Prioritas</span>' : '') +
+                    renderStatusLabelBadge(itemM.labelStatus) +
                     (isRestricted ? '    <span class="pin-badge" style="background:rgba(249,115,22,0.15); border-color:rgba(249,115,22,0.4); color:var(--accent-orange, #f97316);"><i class="fa-solid fa-lock"></i> Akses Terbatas</span>' : '') +
-                    (hasUrl ? '' : '    <span class="count-pill" style="font-size:0.7rem;"><i class="fa-solid fa-folder-open"></i> Induk Folder</span>') +
+                    (hasUrl ? '    <span class="count-pill" data-click-id="' + mId + '" title="Total Klik"><i class="fa-solid fa-chart-simple" style="color:var(--accent-cyan);"></i> ' + (parseInt(itemM.clickCount, 10) || 0) + 'x</span>' : '    <span class="count-pill" style="font-size:0.7rem;"><i class="fa-solid fa-folder-open"></i> Induk Folder</span>') +
                     (cSubs.length > 0 ? '    <span class="count-pill"><i class="fa-solid fa-network-wired"></i> ' + cSubs.length + ' Sub Link</span>' : '') +
                     '  </div>' +
                     '  <h3 class="public-card-title">' +
@@ -7451,7 +7811,7 @@
                             '    <span style="cursor:pointer;" onclick="openRestrictedPinModal(\'' + mId + '\')">' +
                             escapeHtml(itemM.judul) + ' <i class="fa-solid fa-lock" style="font-size:0.72rem; color:var(--accent-orange, #f97316); margin-left:4px;"></i></span>'
                             :
-                            '    <a href="' + sanitizeUrl(itemM.url) + '" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:none;">' +
+                            '    <a href="' + sanitizeUrl(itemM.url) + '" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:none;" onclick="return handlePublicLinkClick(event, \'' + mId + '\')">' +
                             escapeHtml(itemM.judul) + ' <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.72rem; opacity:0.6;"></i></a>'
                         )
                         :
@@ -7467,11 +7827,17 @@
                             '      <i class="fa-solid fa-lock"></i> <span>Akses Terbatas</span>' +
                             '    </button>'
                             :
-                            '    <a href="' + sanitizeUrl(itemM.url) + '" target="_blank" rel="noopener noreferrer" class="btn-public-access">' +
+                            '    <a href="' + sanitizeUrl(itemM.url) + '" target="_blank" rel="noopener noreferrer" class="btn-public-access" onclick="return handlePublicLinkClick(event, \'' + mId + '\')">' +
                             '      <i class="fa-solid fa-arrow-up-right-from-square"></i> <span>Buka Tautan</span>' +
                             '    </a>' +
                             '    <button type="button" class="btn-public-copy" onclick="copyLinkUrl(\'' + mId + '\')" title="Salin URL">' +
                             '      <i class="fa-regular fa-copy"></i>' +
+                            '    </button>' +
+                            '    <button type="button" class="btn-public-copy" onclick="openQrCodeModal(\'' + mId + '\')" title="Tampilkan QR Code">' +
+                            '      <i class="fa-solid fa-qrcode" style="color:var(--accent-cyan);"></i>' +
+                            '    </button>' +
+                            '    <button type="button" class="btn-public-copy" onclick="shareLinkWhatsApp(\'' + mId + '\')" title="Bagikan ke WhatsApp">' +
+                            '      <i class="fa-brands fa-whatsapp" style="color:#22c55e;"></i>' +
                             '    </button>'
                         )
                         :
@@ -7502,7 +7868,9 @@
                             '    <i class="fa-solid fa-code-branch" style="color:var(--accent-cyan); font-size:0.8rem; flex-shrink:0;"></i>' +
                             '    <div style="flex:1; min-width:0; overflow:hidden;">' +
                             '      <div class="public-sublink-title">' + escapeHtml(sItem.judul) +
+                            ' ' + renderStatusLabelBadge(sItem.labelStatus) +
                             (isSRestricted ? ' <span style="font-size:0.68rem; font-weight:600; padding:1px 6px; border-radius:4px; background:rgba(249,115,22,0.15); color:#fdba74; border:1px solid rgba(249,115,22,0.3); vertical-align:middle; margin-left:4px;"><i class="fa-solid fa-lock" style="font-size:0.6rem;"></i> Terbatas</span>' : '') +
+                            ' <span class="count-pill" data-click-id="' + sId + '" style="font-size:0.65rem; padding:1px 6px; margin-left:4px;" title="Total Klik"><i class="fa-solid fa-chart-simple" style="color:var(--accent-cyan);"></i> ' + (parseInt(sItem.clickCount, 10) || 0) + 'x</span>' +
                             '      </div>' +
                             (sItem.deskripsi ? '      <div style="font-size:0.72rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(sItem.deskripsi) + '</div>' : '') +
                             '    </div>' +
@@ -7514,11 +7882,17 @@
                                     '      <i class="fa-solid fa-lock"></i> Akses' +
                                     '    </button>'
                                     :
-                                    '    <a href="' + sanitizeUrl(sItem.url) + '" target="_blank" rel="noopener noreferrer" class="btn-sub-direct">' +
+                                    '    <a href="' + sanitizeUrl(sItem.url) + '" target="_blank" rel="noopener noreferrer" class="btn-sub-direct" onclick="return handlePublicLinkClick(event, \'' + sId + '\')">' +
                                     '      <i class="fa-solid fa-arrow-up-right-from-square"></i> Akses' +
                                     '    </a>' +
                                     '    <button type="button" class="action-icon-btn" style="width:28px; height:28px; font-size:0.75rem;" onclick="copyLinkUrl(\'' + sId + '\')" title="Salin URL">' +
                                     '      <i class="fa-regular fa-copy"></i>' +
+                                    '    </button>' +
+                                    '    <button type="button" class="action-icon-btn" style="width:28px; height:28px; font-size:0.75rem;" onclick="openQrCodeModal(\'' + sId + '\')" title="QR Code">' +
+                                    '      <i class="fa-solid fa-qrcode" style="color:var(--accent-cyan);"></i>' +
+                                    '    </button>' +
+                                    '    <button type="button" class="action-icon-btn" style="width:28px; height:28px; font-size:0.75rem;" onclick="shareLinkWhatsApp(\'' + sId + '\')" title="Bagikan ke WhatsApp">' +
+                                    '      <i class="fa-brands fa-whatsapp" style="color:#22c55e;"></i>' +
                                     '    </button>'
                                 ) : '') +
                             '  </div>' +
@@ -7536,7 +7910,9 @@
                                     '    <i class="fa-solid fa-circle-nodes" style="color:var(--accent-purple); font-size:0.75rem; flex-shrink:0;"></i>' +
                                     '    <div style="flex:1; min-width:0; overflow:hidden;">' +
                                     '      <div class="public-sublink-title" style="font-size:0.82rem;">' + escapeHtml(gItem.judul) +
+                                    ' ' + renderStatusLabelBadge(gItem.labelStatus) +
                                     (isGRestricted ? ' <span style="font-size:0.65rem; font-weight:600; padding:1px 5px; border-radius:4px; background:rgba(249,115,22,0.15); color:#fdba74; border:1px solid rgba(249,115,22,0.3); vertical-align:middle; margin-left:4px;"><i class="fa-solid fa-lock" style="font-size:0.58rem;"></i> Terbatas</span>' : '') +
+                                    ' <span class="count-pill" data-click-id="' + gId + '" style="font-size:0.62rem; padding:1px 5px; margin-left:4px;" title="Total Klik"><i class="fa-solid fa-chart-simple" style="color:var(--accent-cyan);"></i> ' + (parseInt(gItem.clickCount, 10) || 0) + 'x</span>' +
                                     '      </div>' +
                                     '    </div>' +
                                     '  </div>' +
@@ -7547,11 +7923,17 @@
                                             '      <i class="fa-solid fa-lock"></i> Akses' +
                                             '    </button>'
                                             :
-                                            '    <a href="' + sanitizeUrl(gItem.url) + '" target="_blank" rel="noopener noreferrer" class="btn-sub-direct" style="background:rgba(192,132,252,0.15); border-color:rgba(192,132,252,0.35); color:#c084fc;">' +
+                                            '    <a href="' + sanitizeUrl(gItem.url) + '" target="_blank" rel="noopener noreferrer" class="btn-sub-direct" style="background:rgba(192,132,252,0.15); border-color:rgba(192,132,252,0.35); color:#c084fc;" onclick="return handlePublicLinkClick(event, \'' + gId + '\')">' +
                                             '      <i class="fa-solid fa-arrow-up-right-from-square"></i> Akses' +
                                             '    </a>' +
                                             '    <button type="button" class="action-icon-btn" style="width:28px; height:28px; font-size:0.75rem;" onclick="copyLinkUrl(\'' + gId + '\')" title="Salin URL">' +
                                             '      <i class="fa-regular fa-copy"></i>' +
+                                            '    </button>' +
+                                            '    <button type="button" class="action-icon-btn" style="width:28px; height:28px; font-size:0.75rem;" onclick="openQrCodeModal(\'' + gId + '\')" title="QR Code">' +
+                                            '      <i class="fa-solid fa-qrcode" style="color:var(--accent-cyan);"></i>' +
+                                            '    </button>' +
+                                            '    <button type="button" class="action-icon-btn" style="width:28px; height:28px; font-size:0.75rem;" onclick="shareLinkWhatsApp(\'' + gId + '\')" title="Bagikan ke WhatsApp">' +
+                                            '      <i class="fa-brands fa-whatsapp" style="color:#22c55e;"></i>' +
                                             '    </button>'
                                         ) : '') +
                                     '  </div>' +
