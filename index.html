@@ -2730,15 +2730,113 @@
             border-color: var(--cyber-orange);
         }
 
+        /* OPEN CYBER-FOLDER SHOWCASE ARCHITECTURE */
+        .public-folder-unit {
+            width: 100%;
+            max-width: 1180px;
+            margin: 0 auto 10px auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cyber-folder-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            align-self: flex-start;
+            margin-left: 20px;
+            padding: 7px 18px 6px 16px;
+            background: linear-gradient(180deg, #1a1e2e 0%, #11131c 100%);
+            border: 1px solid rgba(255, 102, 0, 0.38);
+            border-bottom: none;
+            border-radius: 14px 14px 0 0;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #ffffff;
+            box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.35);
+            position: relative;
+            z-index: 2;
+        }
+
+        body.theme-light .cyber-folder-tab {
+            background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%);
+            border-color: #fdba74;
+            color: #9a3412;
+            box-shadow: none;
+        }
+
+        .public-link-card.folder-showcase-card {
+            flex: 1 1 100%;
+            max-width: 1180px;
+            width: 100%;
+            padding: 22px 24px 24px 24px;
+            border-color: rgba(255, 102, 0, 0.32);
+            background: linear-gradient(180deg, #131622 0%, #0d0f17 100%);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        body.theme-light .public-link-card.folder-showcase-card {
+            background: #ffffff;
+            border-color: #fed7aa;
+            box-shadow: 0 10px 30px rgba(234, 88, 12, 0.08);
+        }
+
+        .folder-showcase-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        body.theme-light .folder-showcase-header {
+            border-bottom-color: #e2e8f0;
+        }
+
+        .folder-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .folder-showcase-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(255, 102, 0, 0.2), rgba(234, 88, 12, 0.08));
+            border: 1px solid rgba(255, 102, 0, 0.45);
+            color: var(--cyber-orange);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+            box-shadow: 0 0 20px rgba(255, 102, 0, 0.18);
+        }
+
         /* Public Sublinks Bento Grid & 3-Tier Mini-Card */
         .public-sublinks-wrapper {
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+            margin-top: 18px;
+            padding: 18px;
+            background: rgba(6, 8, 14, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-            gap: 14px;
+            grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+            gap: 16px;
             text-align: left;
+            box-shadow: inset 0 4px 16px rgba(0, 0, 0, 0.45);
+        }
+
+        body.theme-light .public-sublinks-wrapper {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.03);
         }
 
         .public-sublink-row {
@@ -7820,12 +7918,8 @@
         }
 
         function togglePublicSublinks(id) {
-            var isCurrentlyOpen = Boolean(APP_STATE.landingExpandedCards[id]);
-            // Exclusive Auto-Accordion: Tutup semua kartu lain
-            APP_STATE.landingExpandedCards = {};
-            if (!isCurrentlyOpen) {
-                APP_STATE.landingExpandedCards[id] = true;
-            }
+            var isCurrentlyOpen = (APP_STATE.landingExpandedCards[id] !== false);
+            APP_STATE.landingExpandedCards[id] = !isCurrentlyOpen;
             renderLandingComponents();
         }
 
@@ -7841,18 +7935,7 @@
             var activeCat = APP_STATE.landingActiveCategory || 'ALL';
             var pinnedOnly = Boolean(APP_STATE.landingPinnedOnly);
 
-            var anyCardExpanded = false;
-            for (var expK in APP_STATE.landingExpandedCards) {
-                if (APP_STATE.landingExpandedCards[expK]) {
-                    anyCardExpanded = true;
-                    break;
-                }
-            }
-            if (anyCardExpanded) {
-                container.classList.add('has-expanded-card');
-            } else {
-                container.classList.remove('has-expanded-card');
-            }
+            container.classList.remove('has-expanded-card');
 
             // Render Hero Quick Category Chips
             if (quickChips) {
@@ -7989,68 +8072,99 @@
                 cSubs.sort(function (a, b) { return (parseInt(a.urutan, 10) || 1) - (parseInt(b.urutan, 10) || 1); });
                 var isPinned = (itemM.statusPin === 'Pinned');
                 var hasUrl = Boolean(itemM.url && itemM.url.trim() !== '' && itemM.url.trim() !== '#');
-                var isExpanded = Boolean(APP_STATE.landingExpandedCards[itemM.id]);
+                // Default: Seluruh Folder Terbuka Otomatis sejak halaman pertama dimuat
+                var isExpanded = (APP_STATE.landingExpandedCards[itemM.id] !== false);
                 var isRestricted = (itemM.visibilitas === 'Restricted');
+                var isFolderShowcase = (cSubs.length > 0);
+
+                html += '<div class="' + (isFolderShowcase ? 'public-folder-unit' : '') + '">';
+
+                if (isFolderShowcase) {
+                    html +=
+                        '<div class="cyber-folder-tab">' +
+                        '  <i class="fa-solid ' + (isExpanded ? 'fa-folder-open' : 'fa-folder') + '" style="color:var(--cyber-orange);"></i>' +
+                        '  <span>FOLDER: ' + escapeHtml(catM.nama) + '</span>' +
+                        '  <span style="opacity:0.45;">&bull;</span>' +
+                        '  <span style="color:var(--accent-cyan);">' + cSubs.length + ' Aplikasi</span>' +
+                        '</div>';
+                }
 
                 html +=
-                    '<div class="public-link-card ' + (isPinned ? 'pinned ' : '') + (isExpanded ? 'is-expanded ' : '') + (isRestricted ? 'node-restricted ' : '') + '">' +
-                    '  <div class="public-card-meta">' +
-                    '    <span class="cat-pill" style="border: 1px solid ' + escapeHtml(catM.warna) + '44;">' +
-                    '      <span class="cat-dot" style="background:' + escapeHtml(catM.warna) + ';"></span>' +
-                    '      <span>' + escapeHtml(catM.nama) + '</span>' +
-                    '    </span>' +
-                    (isPinned ? '    <span class="pin-badge"><i class="fa-solid fa-thumbtack"></i> Prioritas</span>' : '') +
-                    renderStatusLabelBadge(itemM.labelStatus, itemM.deskripsi, !hasUrl) +
-                    (isRestricted ? '    <span class="pin-badge" style="background:rgba(249,115,22,0.15); border-color:rgba(249,115,22,0.4); color:var(--accent-orange, #f97316);"><i class="fa-solid fa-lock"></i> Akses Terbatas</span>' : '') +
-                    (hasUrl ? '    <span class="count-pill" data-click-id="' + mId + '" title="Total Klik"><i class="fa-solid fa-chart-simple" style="color:var(--accent-cyan);"></i> ' + (parseInt(itemM.clickCount, 10) || 0) + 'x</span>' : '    <span class="count-pill" style="font-size:0.7rem;"><i class="fa-solid fa-folder-open"></i> Induk Folder</span>') +
-                    (cSubs.length > 0 ? '    <span class="count-pill"><i class="fa-solid fa-network-wired"></i> ' + cSubs.length + ' Sub Link</span>' : '') +
-                    '  </div>' +
-                    '  <h3 class="public-card-title">' +
-                    (hasUrl ?
-                        (isRestricted ?
-                            '    <span style="cursor:pointer;" onclick="openRestrictedPinModal(\'' + mId + '\')">' +
-                            escapeHtml(itemM.judul) + ' <i class="fa-solid fa-lock" style="font-size:0.72rem; color:var(--accent-orange, #f97316); margin-left:4px;"></i></span>'
-                            :
-                            '    <a href="' + sanitizeUrl(itemM.url) + '" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:none;" onclick="return handlePublicLinkClick(event, \'' + mId + '\')">' +
-                            escapeHtml(itemM.judul) + ' <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.72rem; opacity:0.6;"></i></a>'
-                        )
+                    '<div class="public-link-card ' + (isFolderShowcase ? 'folder-showcase-card ' : '') + (isPinned ? 'pinned ' : '') + (isRestricted ? 'node-restricted ' : '') + '">' +
+                    (isFolderShowcase ?
+                        '  <div class="folder-showcase-header">' +
+                        '    <div class="folder-header-left">' +
+                        '      <div class="folder-showcase-icon">' +
+                        '        <i class="fa-solid ' + (isExpanded ? 'fa-folder-tree' : 'fa-folder') + '"></i>' +
+                        '      </div>' +
+                        '      <div style="text-align:left;">' +
+                        '        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">' +
+                        '          <span class="cat-pill" style="border: 1px solid ' + escapeHtml(catM.warna) + '44;">' +
+                        '            <span class="cat-dot" style="background:' + escapeHtml(catM.warna) + ';"></span>' +
+                        '            <span>' + escapeHtml(catM.nama) + '</span>' +
+                        '          </span>' +
+                        (isPinned ? '          <span class="pin-badge"><i class="fa-solid fa-thumbtack"></i> Prioritas</span>' : '') +
+                        '          <span class="count-pill"><i class="fa-solid fa-cubes"></i> ' + cSubs.length + ' Project di dalam folder ini</span>' +
+                        '        </div>' +
+                        '        <h3 class="public-card-title" style="text-align:left; margin-bottom:2px; font-size:1.28rem;">' + escapeHtml(itemM.judul) + '</h3>' +
+                        (itemM.deskripsi ? '        <p class="public-card-desc" style="text-align:left; margin-bottom:0; font-size:0.84rem;">' + escapeHtml(itemM.deskripsi) + '</p>' : '') +
+                        '      </div>' +
+                        '    </div>' +
+                        '    <div style="display:flex; align-items:center; gap:8px;">' +
+                        '      <button type="button" class="btn btn-glass btn-sm" onclick="togglePublicSublinks(\'' + mId + '\')" style="height:36px; padding:0 14px; border-color:rgba(255,102,0,0.35);">' +
+                        '        <i class="fa-solid ' + (isExpanded ? 'fa-chevron-up' : 'fa-chevron-down') + '" style="color:var(--cyber-orange);"></i> ' +
+                        '        <span>' + (isExpanded ? 'Lipat Folder' : 'Buka Folder (' + cSubs.length + ')') + '</span>' +
+                        '      </button>' +
+                        '    </div>' +
+                        '  </div>'
                         :
-                        '    <span style="cursor:pointer;" onclick="togglePublicSublinks(\'' + mId + '\')">' + escapeHtml(itemM.judul) + '</span>'
-                    ) +
-                    '  </h3>' +
-                    (itemM.deskripsi ? '  <p class="public-card-desc">' + escapeHtml(itemM.deskripsi) + '</p>' : '<p class="public-card-desc" style="opacity:0.4; font-style:italic;">Tidak ada deskripsi tambahan.</p>') +
-                    (hasUrl ? (isRestricted ? '  <div class="public-url-preview" style="color:var(--accent-orange, #f97316); font-style:italic;"><i class="fa-solid fa-lock" style="font-size:0.75rem;"></i> URL Terproteksi Keamanan</div>' : '  <div class="public-url-preview">' + escapeHtml(itemM.url) + '</div>') : '') +
-                    '  <div class="public-card-actions">' +
-                    (hasUrl ?
-                        (isRestricted ?
-                            '    <button type="button" class="btn-public-access" style="background:linear-gradient(135deg, rgba(249,115,22,0.22), rgba(234,88,12,0.3)); border-color:rgba(249,115,22,0.5); color:#fdba74;" onclick="openRestrictedPinModal(\'' + mId + '\')">' +
-                            '      <i class="fa-solid fa-lock"></i> <span>Akses Terbatas</span>' +
-                            '    </button>'
+                        '  <div class="public-card-meta">' +
+                        '    <span class="cat-pill" style="border: 1px solid ' + escapeHtml(catM.warna) + '44;">' +
+                        '      <span class="cat-dot" style="background:' + escapeHtml(catM.warna) + ';"></span>' +
+                        '      <span>' + escapeHtml(catM.nama) + '</span>' +
+                        '    </span>' +
+                        (isPinned ? '    <span class="pin-badge"><i class="fa-solid fa-thumbtack"></i> Prioritas</span>' : '') +
+                        renderStatusLabelBadge(itemM.labelStatus, itemM.deskripsi, !hasUrl) +
+                        (isRestricted ? '    <span class="pin-badge" style="background:rgba(249,115,22,0.15); border-color:rgba(249,115,22,0.4); color:var(--accent-orange, #f97316);"><i class="fa-solid fa-lock"></i> Akses Terbatas</span>' : '') +
+                        (hasUrl ? '    <span class="count-pill" data-click-id="' + mId + '" title="Total Klik"><i class="fa-solid fa-chart-simple" style="color:var(--accent-cyan);"></i> ' + (parseInt(itemM.clickCount, 10) || 0) + 'x</span>' : '    <span class="count-pill" style="font-size:0.7rem;"><i class="fa-solid fa-folder-open"></i> Induk Folder</span>') +
+                        '  </div>' +
+                        '  <h3 class="public-card-title">' +
+                        (hasUrl ?
+                            (isRestricted ?
+                                '    <span style="cursor:pointer;" onclick="openRestrictedPinModal(\'' + mId + '\')">' +
+                                escapeHtml(itemM.judul) + ' <i class="fa-solid fa-lock" style="font-size:0.72rem; color:var(--accent-orange, #f97316); margin-left:4px;"></i></span>'
+                                :
+                                '    <a href="' + sanitizeUrl(itemM.url) + '" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:none;" onclick="return handlePublicLinkClick(event, \'' + mId + '\')">' +
+                                escapeHtml(itemM.judul) + ' <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.72rem; opacity:0.6;"></i></a>'
+                            )
                             :
-                            '    <a href="' + sanitizeUrl(itemM.url) + '" target="_blank" rel="noopener noreferrer" class="btn-public-access" onclick="return handlePublicLinkClick(event, \'' + mId + '\')">' +
-                            '      <i class="fa-solid fa-arrow-up-right-from-square"></i> <span>Buka Tautan</span>' +
-                            '    </a>' +
-                            '    <button type="button" class="btn-public-copy" onclick="copyLinkUrl(\'' + mId + '\')" title="Salin URL">' +
-                            '      <i class="fa-regular fa-copy"></i>' +
-                            '    </button>' +
-                            '    <button type="button" class="btn-public-copy" onclick="openQrCodeModal(\'' + mId + '\')" title="Tampilkan QR Code">' +
-                            '      <i class="fa-solid fa-qrcode" style="color:var(--accent-cyan);"></i>' +
-                            '    </button>' +
-                            '    <button type="button" class="btn-public-copy" onclick="shareLinkWhatsApp(\'' + mId + '\')" title="Bagikan ke WhatsApp">' +
-                            '      <i class="fa-brands fa-whatsapp" style="color:#22c55e;"></i>' +
-                            '    </button>'
-                        )
-                        :
-                        '    <button type="button" class="btn-public-folder" onclick="togglePublicSublinks(\'' + mId + '\')">' +
-                        '      <i class="fa-solid ' + (isExpanded ? 'fa-folder-open' : 'fa-folder') + '"></i> ' +
-                        '      <span>' + (isExpanded ? 'Tutup Sub Link (' + cSubs.length + ')' : 'Lihat Sub Link (' + cSubs.length + ')') + '</span>' +
-                        '    </button>'
-                    ) +
-                    (hasUrl && cSubs.length > 0 ?
-                        '    <button type="button" class="btn btn-glass btn-sm" onclick="togglePublicSublinks(\'' + mId + '\')" title="Lihat Sub Link">' +
-                        '      <i class="fa-solid ' + (isExpanded ? 'fa-chevron-up' : 'fa-chevron-down') + '"></i> ' + cSubs.length +
-                        '    </button>' : '') +
-                    '  </div>';
+                            '    <span>' + escapeHtml(itemM.judul) + '</span>'
+                        ) +
+                        '  </h3>' +
+                        (itemM.deskripsi ? '  <p class="public-card-desc">' + escapeHtml(itemM.deskripsi) + '</p>' : '<p class="public-card-desc" style="opacity:0.4; font-style:italic;">Tidak ada deskripsi tambahan.</p>') +
+                        (hasUrl ? (isRestricted ? '  <div class="public-url-preview" style="color:var(--accent-orange, #f97316); font-style:italic;"><i class="fa-solid fa-lock" style="font-size:0.75rem;"></i> URL Terproteksi Keamanan</div>' : '  <div class="public-url-preview">' + escapeHtml(itemM.url) + '</div>') : '') +
+                        '  <div class="public-card-actions">' +
+                        (hasUrl ?
+                            (isRestricted ?
+                                '    <button type="button" class="btn-public-access" style="background:linear-gradient(135deg, rgba(249,115,22,0.22), rgba(234,88,12,0.3)); border-color:rgba(249,115,22,0.5); color:#fdba74;" onclick="openRestrictedPinModal(\'' + mId + '\')">' +
+                                '      <i class="fa-solid fa-lock"></i> <span>Akses Terbatas</span>' +
+                                '    </button>'
+                                :
+                                '    <a href="' + sanitizeUrl(itemM.url) + '" target="_blank" rel="noopener noreferrer" class="btn-public-access" onclick="return handlePublicLinkClick(event, \'' + mId + '\')">' +
+                                '      <i class="fa-solid fa-arrow-up-right-from-square"></i> <span>Buka Tautan</span>' +
+                                '    </a>' +
+                                '    <button type="button" class="btn-public-copy" onclick="copyLinkUrl(\'' + mId + '\')" title="Salin URL">' +
+                                '      <i class="fa-regular fa-copy"></i>' +
+                                '    </button>' +
+                                '    <button type="button" class="btn-public-copy" onclick="openQrCodeModal(\'' + mId + '\')" title="Tampilkan QR Code">' +
+                                '      <i class="fa-solid fa-qrcode" style="color:var(--accent-cyan);"></i>' +
+                                '    </button>' +
+                                '    <button type="button" class="btn-public-copy" onclick="shareLinkWhatsApp(\'' + mId + '\')" title="Bagikan ke WhatsApp">' +
+                                '      <i class="fa-brands fa-whatsapp" style="color:#22c55e;"></i>' +
+                                '    </button>'
+                            ) : '') +
+                        '  </div>'
+                    );
 
                 // RENDER SUBLINKS (3-TIER MINI-CARD IN 2-COLUMN BENTO GRID)
                 if (cSubs.length > 0 && (isExpanded || query !== '')) {
@@ -8145,7 +8259,7 @@
                     html += '</div>';
                 }
 
-                html += '</div>';
+                html += '</div></div>';
             }
 
             container.innerHTML = html;
