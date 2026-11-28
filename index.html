@@ -2063,6 +2063,78 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-wrap: nowrap;
+        }
+
+        .btn-wa-nav {
+            background: rgba(34, 197, 94, 0.12);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.36);
+            box-shadow: 0 2px 10px rgba(34, 197, 94, 0.12);
+            white-space: nowrap;
+        }
+
+        .btn-wa-nav:hover {
+            background: rgba(34, 197, 94, 0.22);
+            border-color: rgba(74, 222, 128, 0.72);
+            color: #ffffff;
+            box-shadow: 0 4px 16px rgba(34, 197, 94, 0.28);
+            transform: translateY(-1px);
+        }
+
+        .wa-service-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .wa-service-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-tech);
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .wa-service-chip:hover {
+            border-color: rgba(34, 197, 94, 0.45);
+            color: #ffffff;
+            background: rgba(34, 197, 94, 0.07);
+        }
+
+        .wa-service-chip.active {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.14);
+            color: #ffffff;
+            box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.25);
+        }
+
+        .wa-service-chip i {
+            color: #4ade80;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .btn-wa-submit {
+            background: #16a34a;
+            color: #ffffff;
+            border: 1px solid #22c55e;
+            box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+        }
+
+        .btn-wa-submit:hover {
+            background: #22c55e;
+            box-shadow: 0 6px 18px rgba(34, 197, 94, 0.45);
+            transform: translateY(-1px);
         }
 
         /* ==========================================================================
@@ -3136,6 +3208,41 @@
             color: #64748b;
         }
 
+        body.theme-light .btn-wa-nav {
+            background: rgba(22, 163, 74, 0.08);
+            color: #15803d;
+            border-color: rgba(22, 163, 74, 0.35);
+            box-shadow: none;
+        }
+
+        body.theme-light .btn-wa-nav:hover {
+            background: #16a34a;
+            color: #ffffff;
+            border-color: #15803d;
+        }
+
+        body.theme-light .wa-service-chip {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #334155;
+        }
+
+        body.theme-light .wa-service-chip:hover {
+            border-color: #16a34a;
+            color: #0f172a;
+            background: rgba(22, 163, 74, 0.06);
+        }
+
+        body.theme-light .wa-service-chip.active {
+            border-color: #16a34a;
+            background: rgba(22, 163, 74, 0.12);
+            color: #064e3b;
+        }
+
+        body.theme-light .wa-service-chip i {
+            color: #16a34a;
+        }
+
         /* FLOATING ANNOUNCEMENT CAPSULE IN LIGHT MODE */
         body.theme-light .hero-announcement-capsule {
             background: #ffffff;
@@ -3411,6 +3518,29 @@
                 height: 26px !important;
                 font-size: 0.7rem !important;
             }
+
+            .landing-nav-inner {
+                padding: 10px 12px;
+                gap: 8px;
+            }
+
+            .landing-brand-sub {
+                display: none;
+            }
+
+            .landing-nav-actions {
+                gap: 5px;
+            }
+
+            .landing-nav-actions .btn-sm {
+                padding: 5px 8px;
+                font-size: 0.72rem;
+                gap: 4px;
+            }
+
+            .wa-service-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* ==========================================================================
@@ -3540,6 +3670,11 @@
                         title="Ganti Mode Terang / Gelap">
                         <i id="landingThemeIcon" class="fa-solid fa-sun" style="color: var(--accent-orange);"></i>
                         <span style="font-size:0.75rem;">Tema</span>
+                    </button>
+                    <button type="button" class="btn btn-wa-nav btn-sm" id="landingWaOrderBtn"
+                        onclick="openWaOrderModal()" title="Konsultasi &amp; Pemesanan Aplikasi / Landing Page">
+                        <i class="fa-brands fa-whatsapp"></i>
+                        <span id="landingWaBtnText">Pesan Aplikasi / Web</span>
                     </button>
                     <a href="#directorySection" class="btn btn-primary btn-sm" id="landingNavActionBtn"
                         style="text-decoration:none;">
@@ -4184,6 +4319,10 @@
                     onclick="switchLandingSettingsTab('footer')">
                     <i class="fa-solid fa-layer-group"></i> Direktori &amp; Footer
                 </button>
+                <button type="button" class="settings-tab-btn" id="tabBtnOrder"
+                    onclick="switchLandingSettingsTab('order')">
+                    <i class="fa-brands fa-whatsapp" style="color:#4ade80;"></i> Pemesanan WA
+                </button>
             </div>
 
             <form id="landingSettingsForm" onsubmit="event.preventDefault(); submitLandingSettingsForm();"
@@ -4343,10 +4482,58 @@
                         <label class="form-label" for="cfgFooterCopyrightText">Teks Hak Cipta &amp; Keterangan
                             Footer</label>
                         <input type="text" id="cfgFooterCopyrightText" class="form-control"
-                            placeholder="© 2026 91KMEDW Link Pro • Portal Tautan Publik & Manajemen Terpadu">
+                            placeholder="© 2026 91KMEDW Link Pro • Ruang Akses Aplikasi & Portofolio Sistem Terpadu">
                     </div>
 
 
+                </div>
+
+                <!-- TAB 3: PEMESANAN & KONSULTASI WHATSAPP -->
+                <div id="tabPaneOrder" class="settings-tab-pane">
+                    <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.28); border-radius:10px; padding:12px 14px; margin-bottom:14px;">
+                        <div>
+                            <div style="font-size:0.86rem; font-weight:700; color:#fff;">
+                                <i class="fa-brands fa-whatsapp" style="color:#4ade80; margin-right:6px;"></i>
+                                Tombol Pesan Aplikasi / Landing Page di Navbar
+                            </div>
+                            <div style="font-size:0.74rem; color:var(--text-secondary); margin-top:2px;">
+                                Tampilkan tombol konsultasi &amp; pemesanan proyek sejajar di pojok kanan atas portal.
+                            </div>
+                        </div>
+                        <label class="form-check-label"
+                            style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:0.8rem; color:#fff; flex-shrink:0;">
+                            <input type="checkbox" id="cfgWaOrderEnabled" class="form-check-input" checked>
+                            <span>Aktif</span>
+                        </label>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label class="form-label" for="cfgWaOrderPhone">Nomor WhatsApp Tujuan</label>
+                            <input type="text" id="cfgWaOrderPhone" class="form-control"
+                                placeholder="Contoh: 081234567890 atau 62812...">
+                            <span style="font-size:0.72rem; color:var(--text-muted); margin-top:4px; display:block;">
+                                Awalan <code>08...</code> otomatis diubah ke format internasional <code>628...</code>.
+                            </span>
+                        </div>
+                        <div class="form-group col-6">
+                            <label class="form-label" for="cfgWaOrderBtnText">Teks Tombol di Navbar</label>
+                            <input type="text" id="cfgWaOrderBtnText" class="form-control"
+                                placeholder="Pesan Aplikasi / Web">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="cfgWaOrderModalTitle">Judul Popup Konsultasi / Order</label>
+                        <input type="text" id="cfgWaOrderModalTitle" class="form-control"
+                            placeholder="Konsultasi & Pemesanan Proyek">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="cfgWaOrderModalSubtitle">Kalimat Pengantar Popup</label>
+                        <textarea id="cfgWaOrderModalSubtitle" class="form-control" rows="2"
+                            placeholder="Butuh aplikasi web, dashboard, atau landing page yang tertata rapi?..."></textarea>
+                    </div>
                 </div>
 
                 <div class="modal-footer"
@@ -4718,6 +4905,83 @@
                     </a>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================
+       11. MODAL KONSULTASI & PEMESANAN PROYEK VIA WHATSAPP (OPSI B)
+       ======================================================================== -->
+    <div id="waOrderModal" class="modal-backdrop hidden" onclick="if(event.target === this) closeWaOrderModal()">
+        <div class="modal-dialog" style="max-width: 520px;">
+            <div class="modal-header" style="margin-bottom: 10px;">
+                <div class="modal-title" style="display:flex; align-items:center; gap:10px;">
+                    <i class="fa-brands fa-whatsapp" style="color: #4ade80; font-size: 1.15rem;"></i>
+                    <span id="waOrderModalHeading">Konsultasi &amp; Pemesanan Proyek</span>
+                </div>
+                <button type="button" class="action-icon-btn" onclick="closeWaOrderModal()" title="Tutup">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <p id="waOrderModalSub" style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 14px;">
+                Butuh aplikasi web, dashboard, atau landing page yang tertata rapi? Sampaikan kebutuhan singkat Anda untuk berdiskusi langsung melalui WhatsApp.
+            </p>
+
+            <form id="waOrderForm" onsubmit="event.preventDefault(); submitWaOrderForm();">
+                <input type="hidden" id="waOrderSelectedService" value="Aplikasi Web / Sistem Kerja">
+
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label class="form-label">Pilih Jenis Kebutuhan</label>
+                    <div class="wa-service-grid" id="waServiceGrid">
+                        <button type="button" class="wa-service-chip active"
+                            onclick="selectWaOrderService(this, 'Aplikasi Web / Sistem Kerja')">
+                            <i class="fa-solid fa-laptop-code"></i>
+                            <span>Aplikasi Web / Sistem</span>
+                        </button>
+                        <button type="button" class="wa-service-chip"
+                            onclick="selectWaOrderService(this, 'Landing Page / Web Profil')">
+                            <i class="fa-solid fa-globe"></i>
+                            <span>Landing Page / Web</span>
+                        </button>
+                        <button type="button" class="wa-service-chip"
+                            onclick="selectWaOrderService(this, 'Dashboard Data & Otomatisasi')">
+                            <i class="fa-solid fa-chart-line"></i>
+                            <span>Dashboard &amp; Otomatisasi</span>
+                        </button>
+                        <button type="button" class="wa-service-chip"
+                            onclick="selectWaOrderService(this, 'Konsultasi Custom Lainnya')">
+                            <i class="fa-solid fa-comments"></i>
+                            <span>Konsultasi Umum</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label class="form-label" for="waOrderClientName">Nama / Instansi <span style="color:var(--text-muted); font-weight:400;">(Opsional)</span></label>
+                    <input type="text" id="waOrderClientName" class="form-control"
+                        placeholder="Contoh: Budi / Klinik Pratama...">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label class="form-label" for="waOrderNotes">Gambaran Singkat Kebutuhan</label>
+                    <textarea id="waOrderNotes" class="form-control" rows="3"
+                        placeholder="Ceritakan singkat fitur yang diinginkan atau sistem yang ingin dibuat..."></textarea>
+                </div>
+
+                <div id="waOrderPhoneUnsetNotice" class="hidden"
+                    style="background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.35); color:#fbbf24; border-radius:8px; padding:10px 12px; font-size:0.78rem; margin-bottom:12px;">
+                    <i class="fa-solid fa-circle-info" style="margin-right:6px;"></i>
+                    Nomor WhatsApp tujuan belum diatur di menu <strong>Admin → Pengaturan Landing → Tab Pemesanan WA</strong>.
+                </div>
+
+                <div class="modal-footer" style="padding-top:12px; margin-top:8px;">
+                    <button type="button" class="btn btn-glass" onclick="closeWaOrderModal()">Batal</button>
+                    <button type="submit" id="btnSendWaOrder" class="btn btn-wa-submit">
+                        <i class="fa-brands fa-whatsapp"></i>
+                        <span>Lanjut ke WhatsApp</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -6445,6 +6709,78 @@
         function closeImageLightbox() {
             var modal = document.getElementById('imageLightboxModal');
             if (modal) modal.classList.add('hidden');
+        }
+
+        function normalizeWaPhoneNumber(rawPhone) {
+            var digits = String(rawPhone || '').replace(/[^\d]/g, '');
+            if (!digits) return '';
+            if (digits.indexOf('0') === 0) {
+                digits = '62' + digits.substring(1);
+            }
+            return digits;
+        }
+
+        function selectWaOrderService(btnEl, serviceName) {
+            var grid = document.getElementById('waServiceGrid');
+            if (grid) {
+                var btns = grid.querySelectorAll('.wa-service-chip');
+                for (var i = 0; i < btns.length; i++) {
+                    btns[i].classList.remove('active');
+                }
+            }
+            if (btnEl) btnEl.classList.add('active');
+            var hiddenInput = document.getElementById('waOrderSelectedService');
+            if (hiddenInput) hiddenInput.value = serviceName || 'Aplikasi Web / Sistem Kerja';
+        }
+
+        function openWaOrderModal() {
+            var modal = document.getElementById('waOrderModal');
+            if (!modal) return;
+            var cfg = (typeof getEffectiveLandingConfig === 'function') ? getEffectiveLandingConfig() : {};
+            var noticeEl = document.getElementById('waOrderPhoneUnsetNotice');
+            var normalized = normalizeWaPhoneNumber(cfg.waOrderPhone);
+            if (noticeEl) {
+                noticeEl.classList.toggle('hidden', Boolean(normalized));
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeWaOrderModal() {
+            var modal = document.getElementById('waOrderModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function submitWaOrderForm() {
+            var cfg = (typeof getEffectiveLandingConfig === 'function') ? getEffectiveLandingConfig() : {};
+            var waPhone = normalizeWaPhoneNumber(cfg.waOrderPhone);
+            if (!waPhone) {
+                var noticeEl = document.getElementById('waOrderPhoneUnsetNotice');
+                if (noticeEl) noticeEl.classList.remove('hidden');
+                showToast('Nomor WhatsApp belum diatur di Admin → Pengaturan Landing.', 'warning');
+                return;
+            }
+
+            var service = (document.getElementById('waOrderSelectedService') ? document.getElementById('waOrderSelectedService').value : '').trim() || 'Aplikasi Web / Sistem Kerja';
+            var clientName = (document.getElementById('waOrderClientName') ? document.getElementById('waOrderClientName').value : '').trim();
+            var notes = (document.getElementById('waOrderNotes') ? document.getElementById('waOrderNotes').value : '').trim();
+
+            var lines = [
+                'Halo, saya melihat portofolio di *91KMEDW Link Pro* dan tertarik untuk berdiskusi mengenai pembuatan proyek.',
+                '',
+                '*Jenis Kebutuhan:* ' + service
+            ];
+            if (clientName) {
+                lines.push('*Nama / Instansi:* ' + clientName);
+            }
+            if (notes) {
+                lines.push('*Catatan Kebutuhan:* ' + notes);
+            }
+            lines.push('');
+            lines.push('Mohon informasinya jika berkenan berdiskusi lebih lanjut. Terima kasih.');
+
+            var waUrl = 'https://api.whatsapp.com/send?phone=' + encodeURIComponent(waPhone) + '&text=' + encodeURIComponent(lines.join('\n'));
+            window.open(waUrl, '_blank', 'noopener,noreferrer');
+            closeWaOrderModal();
         }
 
         // Global Keyboard Shortcut Ctrl + K untuk Fokus Pencarian Cepat
@@ -8754,7 +9090,13 @@
             directorySubtitle: "Pilih kategori di bawah atau klik kartu proyek untuk melihat pratinjau visual dan membuka tautan.",
 
             footerBrandText: "Developed By 91KMEDW",
-            footerCopyrightText: "© 2026 91KMEDW Link Pro • Ruang Akses Aplikasi & Portofolio Sistem Terpadu"
+            footerCopyrightText: "© 2026 91KMEDW Link Pro • Ruang Akses Aplikasi & Portofolio Sistem Terpadu",
+
+            waOrderEnabled: true,
+            waOrderPhone: "",
+            waOrderBtnText: "Pesan Aplikasi / Web",
+            waOrderModalTitle: "Konsultasi & Pemesanan Proyek",
+            waOrderModalSubtitle: "Butuh aplikasi web, dashboard, atau landing page yang tertata rapi? Sampaikan kebutuhan singkat Anda untuk berdiskusi langsung melalui WhatsApp."
         };
 
         function getEffectiveLandingConfig() {
@@ -8865,6 +9207,24 @@
             if (footBrand) footBrand.textContent = cfg.footerBrandText || 'Developed By 91KMEDW';
             var footCopy = document.getElementById('landingFooterCopy');
             if (footCopy) footCopy.textContent = cfg.footerCopyrightText || '© 2026 91KMEDW Link Pro • Ruang Akses Aplikasi & Portofolio Sistem Terpadu';
+
+            // Tombol Pemesanan WA di Navbar & Konten Popup Order
+            var waBtn = document.getElementById('landingWaOrderBtn');
+            var waBtnText = document.getElementById('landingWaBtnText');
+            if (waBtn) {
+                waBtn.style.display = (cfg.waOrderEnabled !== false) ? '' : 'none';
+            }
+            if (waBtnText) {
+                waBtnText.textContent = cfg.waOrderBtnText || 'Pesan Aplikasi / Web';
+            }
+            var waHeading = document.getElementById('waOrderModalHeading');
+            if (waHeading) {
+                waHeading.textContent = cfg.waOrderModalTitle || 'Konsultasi & Pemesanan Proyek';
+            }
+            var waSub = document.getElementById('waOrderModalSub');
+            if (waSub) {
+                waSub.textContent = cfg.waOrderModalSubtitle || 'Butuh aplikasi web, dashboard, atau landing page yang tertata rapi? Sampaikan kebutuhan singkat Anda untuk berdiskusi langsung melalui WhatsApp.';
+            }
         }
 
         function handleFeatureCardClick(cardIndex) {
@@ -8937,7 +9297,17 @@
             var elFootCopy = document.getElementById('cfgFooterCopyrightText');
             if (elFootCopy) elFootCopy.value = cfg.footerCopyrightText || '';
 
-
+            // Populate Tab 3 (Pemesanan WA)
+            var elWaEnabled = document.getElementById('cfgWaOrderEnabled');
+            if (elWaEnabled) elWaEnabled.checked = (cfg.waOrderEnabled !== false);
+            var elWaPhone = document.getElementById('cfgWaOrderPhone');
+            if (elWaPhone) elWaPhone.value = cfg.waOrderPhone || '';
+            var elWaBtnTxt = document.getElementById('cfgWaOrderBtnText');
+            if (elWaBtnTxt) elWaBtnTxt.value = cfg.waOrderBtnText || 'Pesan Aplikasi / Web';
+            var elWaTitle = document.getElementById('cfgWaOrderModalTitle');
+            if (elWaTitle) elWaTitle.value = cfg.waOrderModalTitle || 'Konsultasi & Pemesanan Proyek';
+            var elWaSub = document.getElementById('cfgWaOrderModalSubtitle');
+            if (elWaSub) elWaSub.value = cfg.waOrderModalSubtitle || '';
 
             switchLandingSettingsTab('hero');
             modal.classList.remove('hidden');
@@ -8949,23 +9319,18 @@
         }
 
         function switchLandingSettingsTab(tabName) {
-            var tabBtnHero = document.getElementById('tabBtnHero');
-            var tabBtnFooter = document.getElementById('tabBtnFooter');
-            var paneHero = document.getElementById('tabPaneHero');
-            var paneFooter = document.getElementById('tabPaneFooter');
-
-            if (tabBtnHero) tabBtnHero.classList.remove('active');
-            if (tabBtnFooter) tabBtnFooter.classList.remove('active');
-
-            if (paneHero) paneHero.classList.remove('active');
-            if (paneFooter) paneFooter.classList.remove('active');
-
-            if (tabName === 'footer') {
-                if (tabBtnFooter) tabBtnFooter.classList.add('active');
-                if (paneFooter) paneFooter.classList.add('active');
-            } else {
-                if (tabBtnHero) tabBtnHero.classList.add('active');
-                if (paneHero) paneHero.classList.add('active');
+            var tabs = [
+                { key: 'hero', btn: 'tabBtnHero', pane: 'tabPaneHero' },
+                { key: 'footer', btn: 'tabBtnFooter', pane: 'tabPaneFooter' },
+                { key: 'order', btn: 'tabBtnOrder', pane: 'tabPaneOrder' }
+            ];
+            var activeKey = (tabName === 'footer' || tabName === 'order') ? tabName : 'hero';
+            for (var i = 0; i < tabs.length; i++) {
+                var isMatch = (tabs[i].key === activeKey);
+                var btnEl = document.getElementById(tabs[i].btn);
+                var paneEl = document.getElementById(tabs[i].pane);
+                if (btnEl) btnEl.classList.toggle('active', isMatch);
+                if (paneEl) paneEl.classList.toggle('active', isMatch);
             }
         }
 
@@ -9004,7 +9369,13 @@
                 directorySubtitle: (document.getElementById('cfgDirectorySubtitle') ? document.getElementById('cfgDirectorySubtitle').value : '').trim(),
 
                 footerBrandText: (document.getElementById('cfgFooterBrandText') ? document.getElementById('cfgFooterBrandText').value : '').trim(),
-                footerCopyrightText: (document.getElementById('cfgFooterCopyrightText') ? document.getElementById('cfgFooterCopyrightText').value : '').trim()
+                footerCopyrightText: (document.getElementById('cfgFooterCopyrightText') ? document.getElementById('cfgFooterCopyrightText').value : '').trim(),
+
+                waOrderEnabled: document.getElementById('cfgWaOrderEnabled') ? document.getElementById('cfgWaOrderEnabled').checked : true,
+                waOrderPhone: (document.getElementById('cfgWaOrderPhone') ? document.getElementById('cfgWaOrderPhone').value : '').trim(),
+                waOrderBtnText: (document.getElementById('cfgWaOrderBtnText') ? document.getElementById('cfgWaOrderBtnText').value : '').trim() || 'Pesan Aplikasi / Web',
+                waOrderModalTitle: (document.getElementById('cfgWaOrderModalTitle') ? document.getElementById('cfgWaOrderModalTitle').value : '').trim(),
+                waOrderModalSubtitle: (document.getElementById('cfgWaOrderModalSubtitle') ? document.getElementById('cfgWaOrderModalSubtitle').value : '').trim()
             };
 
 
