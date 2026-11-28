@@ -4398,7 +4398,35 @@
             key: "sb_publishable_UrZkAaE9ql7oMx-YEBCZ6A_ooRlQWks"
         };
 
-        function supabaseFetch(path, options) {
+        function refreshSupabaseSessionToken() {
+            var refreshToken = localStorage.getItem('ZETTLINK_SUPABASE_REFRESH_TOKEN');
+            if (!refreshToken) return Promise.resolve(null);
+            return fetch(SUPABASE_CONFIG.url + '/auth/v1/token?grant_type=refresh_token', {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_CONFIG.key,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ refresh_token: refreshToken })
+            })
+                .then(function (r) {
+                    if (!r.ok) return null;
+                    return r.json();
+                })
+                .then(function (data) {
+                    if (data && data.access_token) {
+                        localStorage.setItem('ZETTLINK_SUPABASE_TOKEN', data.access_token);
+                        if (data.refresh_token) {
+                            localStorage.setItem('ZETTLINK_SUPABASE_REFRESH_TOKEN', data.refresh_token);
+                        }
+                        return data.access_token;
+                    }
+                    return null;
+                })
+                .catch(function () { return null; });
+        }
+
+        function supabaseFetch(path, options, isRetry) {
             options = options || {};
             var headers = options.headers || {};
             var token = localStorage.getItem('ZETTLINK_SUPABASE_TOKEN');
@@ -4416,6 +4444,24 @@
                 if (!res.ok) {
                     return res.json().catch(function () { return { message: res.statusText }; }).then(function (errData) {
                         var msg = (errData && (errData.message || errData.msg || errData.hint || errData.details)) || ('HTTP Error ' + res.status);
+                        // Jika JWT Token Admin kedaluwarsa (401 JWT expired), otomatis perbarui token atau fallback
+                        if (!isRetry && (res.status === 401 || /jwt expired|invalid jwt/i.test(String(msg)))) {
+                            return refreshSupabaseSessionToken().then(function (newToken) {
+                                if (newToken) {
+                                    return supabaseFetch(path, options, true);
+                                }
+                                // Hapus token kedaluwarsa agar pembacaan publik tetap berjalan & minta login ulang saat menulis
+                                localStorage.removeItem('ZETTLINK_SUPABASE_TOKEN');
+                                localStorage.removeItem('ZETTLINK_SUPABASE_REFRESH_TOKEN');
+                                if (!options.method || options.method === 'GET') {
+                                    return supabaseFetch(path, options, true);
+                                }
+                                APP_STATE.user = null;
+                                localStorage.removeItem('ZETTLINK_USER_SESSION');
+                                openAdminLoginModal();
+                                throw new Error('Sesi login Admin telah kedaluwarsa. Silakan login kembali untuk menyimpan perubahan.');
+                            });
+                        }
                         throw new Error(msg);
                     });
                 }
@@ -4551,9 +4597,12 @@
                                     return;
                                 }
 
-                                // Simpan JWT Bearer Token Supabase
+                                // Simpan JWT Bearer Token & Refresh Token Supabase
                                 if (data.access_token) {
                                     localStorage.setItem('ZETTLINK_SUPABASE_TOKEN', data.access_token);
+                                }
+                                if (data.refresh_token) {
+                                    localStorage.setItem('ZETTLINK_SUPABASE_REFRESH_TOKEN', data.refresh_token);
                                 }
 
                                 var userProfile = {
@@ -4671,23 +4720,40 @@
                 }
 
                 if (action === 'swapLinkOrder') {
-                    var idA = String(payload && payload.idA ? payload.idA : '').trim();
-                    var idB = String(payload && payload.idB ? payload.idB : '').trim();
-                    var orderA = parseInt(payload && payload.orderA) || 1;
-                    var orderB = parseInt(payload && payload.orderB) || 1;
+                    var batch = (payload && Array.isArray(payload.batchOrders)) ? payload.batchOrders : null;
+                    var requests = [];
+                    if (batch && batch.length > 0) {
+                        for (var b = 0; b < batch.length; b++) {
+                            var bItem = batch[b];
+                            if (bItem && bItem.id) {
+                                requests.push(
+                                    supabaseFetch('links?id=eq.' + encodeURIComponent(String(bItem.id).trim()), {
+                                        method: 'PATCH',
+                                        body: JSON.stringify({ urutan: parseInt(bItem.urutan, 10) || (b + 1) })
+                                    })
+                                );
+                            }
+                        }
+                    } else {
+                        var idA = String(payload && payload.idA ? payload.idA : '').trim();
+                        var idB = String(payload && payload.idB ? payload.idB : '').trim();
+                        var orderA = parseInt(payload && payload.orderA, 10) || 1;
+                        var orderB = parseInt(payload && payload.orderB, 10) || 1;
+                        requests.push(
+                            supabaseFetch('links?id=eq.' + encodeURIComponent(idA), {
+                                method: 'PATCH',
+                                body: JSON.stringify({ urutan: orderA })
+                            }),
+                            supabaseFetch('links?id=eq.' + encodeURIComponent(idB), {
+                                method: 'PATCH',
+                                body: JSON.stringify({ urutan: orderB })
+                            })
+                        );
+                    }
 
-                    Promise.all([
-                        supabaseFetch('links?id=eq.' + encodeURIComponent(idA), {
-                            method: 'PATCH',
-                            body: JSON.stringify({ urutan: orderB })
-                        }),
-                        supabaseFetch('links?id=eq.' + encodeURIComponent(idB), {
-                            method: 'PATCH',
-                            body: JSON.stringify({ urutan: orderA })
-                        })
-                    ])
+                    Promise.all(requests)
                         .then(function () {
-                            if (onSuccess) onSuccess({ success: true, message: 'Urutan tautan berhasil ditukar.' });
+                            if (onSuccess) onSuccess({ success: true, message: 'Urutan tautan berhasil disimpan.' });
                         })
                         .catch(function (err) {
                             if (onError) onError(err);
@@ -7141,6 +7207,11 @@
             target.urutan = partner.urutan;
             partner.urutan = tempOrder;
 
+            // Simpan urutan baru ke cache lokal agar langsung persisten
+            try {
+                localStorage.setItem('ZETTLINK_CACHED_LINKS', JSON.stringify(APP_STATE.links));
+            } catch (e) { }
+
             // Render ulang seketika (Optimistic UI)
             renderHierarchyTree();
             renderLandingComponents();
@@ -7148,7 +7219,12 @@
             var msgDir = (direction === 'UP') ? 'dinaikkan ke atas' : 'diturunkan ke bawah';
             showToast('Urutan "' + target.judul + '" berhasil ' + msgDir + '!', 'success');
 
-            // Sinkronkan ke Google Apps Script backend
+            var batchOrders = [];
+            for (var m = 0; m < siblings.length; m++) {
+                batchOrders.push({ id: siblings[m].id, urutan: siblings[m].urutan });
+            }
+
+            // Sinkronkan ke Supabase Cloud backend
             if (typeof google !== 'undefined' && google.script && google.script.run) {
                 google.script.run
                     .withFailureHandler(function (err) {
@@ -7159,6 +7235,7 @@
                         idB: partner.id,
                         orderA: target.urutan,
                         orderB: partner.urutan,
+                        batchOrders: batchOrders,
                         direction: direction
                     });
             } else {
