@@ -4684,7 +4684,7 @@
                         .then(function (rows) {
                             var realPin = '';
                             if (rows && rows[0]) {
-                                realPin = String(rows[0].value).replace(/^"|"$/g, '').trim();
+                                realPin = String(rows[0].value).replace(/^["'\\\s]+|["'\\\s]+$/g, '').trim();
                             }
                             if (onSuccess) onSuccess({ success: true, pin: realPin });
                         })
@@ -4699,7 +4699,7 @@
                         headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
                         body: JSON.stringify({
                             key: 'RESTRICTED_ACCESS_PIN',
-                            value: JSON.stringify(nPin),
+                            value: nPin,
                             updated_at: new Date().toISOString()
                         })
                     })
