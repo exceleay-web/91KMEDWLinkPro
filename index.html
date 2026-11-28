@@ -17,6 +17,8 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Engine Generator QR Code Lokal (Cloudflare CDN - Bebas Blokir ISP & 0ms Latency) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 
     <style>
         /* ==========================================================================
@@ -5605,6 +5607,35 @@
         }
 
         var CURRENT_QR_TARGET = null;
+        var CURRENT_QR_DATA_URL = '';
+
+        function generateLocalQrDataUrl(text, sizePx) {
+            if (typeof qrcode === 'undefined') return '';
+            var qr = qrcode(0, 'M');
+            qr.addData(String(text || ''));
+            qr.make();
+            var count = qr.getModuleCount();
+            var canvas = document.createElement('canvas');
+            var targetSize = sizePx || 520;
+            var marginModules = 2;
+            var totalModules = count + (marginModules * 2);
+            var cellSize = Math.max(4, Math.floor(targetSize / totalModules));
+            var actualSize = cellSize * totalModules;
+            canvas.width = actualSize;
+            canvas.height = actualSize;
+            var ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, actualSize, actualSize);
+            ctx.fillStyle = '#090a0f';
+            for (var r = 0; r < count; r++) {
+                for (var c = 0; c < count; c++) {
+                    if (qr.isDark(r, c)) {
+                        ctx.fillRect((c + marginModules) * cellSize, (r + marginModules) * cellSize, cellSize, cellSize);
+                    }
+                }
+            }
+            return canvas.toDataURL('image/png');
+        }
 
         function openQrCodeModal(linkId) {
             var item = findLinkById(linkId);
@@ -5623,8 +5654,9 @@
             var imgEl = document.getElementById('qrModalImage');
             if (titleEl) titleEl.textContent = item.judul || 'Tautan';
             if (urlEl) urlEl.textContent = item.url;
-            if (imgEl) {
-                imgEl.src = 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=10&data=' + encodeURIComponent(item.url);
+            CURRENT_QR_DATA_URL = generateLocalQrDataUrl(item.url, 520);
+            if (imgEl && CURRENT_QR_DATA_URL) {
+                imgEl.src = CURRENT_QR_DATA_URL;
             }
             var modal = document.getElementById('qrCodeModal');
             if (modal) modal.classList.remove('hidden');
@@ -5636,25 +5668,15 @@
         }
 
         function downloadQrCodePng() {
-            if (!CURRENT_QR_TARGET || !CURRENT_QR_TARGET.url) return;
-            var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=16&data=' + encodeURIComponent(CURRENT_QR_TARGET.url);
+            if (!CURRENT_QR_TARGET || !CURRENT_QR_DATA_URL) return;
             var safeName = String(CURRENT_QR_TARGET.judul || 'QR-Link').replace(/[^a-zA-Z0-9_-]/g, '_');
-            fetch(qrUrl)
-                .then(function (r) { return r.blob(); })
-                .then(function (blob) {
-                    var blobUrl = URL.createObjectURL(blob);
-                    var a = document.createElement('a');
-                    a.href = blobUrl;
-                    a.download = 'QR_' + safeName + '.png';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(blobUrl);
-                    showToast('Gambar QR Code berhasil diunduh!', 'success');
-                })
-                .catch(function () {
-                    window.open(qrUrl, '_blank', 'noopener,noreferrer');
-                });
+            var a = document.createElement('a');
+            a.href = CURRENT_QR_DATA_URL;
+            a.download = 'QR_' + safeName + '.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast('Gambar QR Code berhasil diunduh!', 'success');
         }
 
         function shareLinkWhatsApp(linkId) {
