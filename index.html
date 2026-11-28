@@ -7301,11 +7301,13 @@
                     closeRestrictedPinModal();
                     showToast('PIN Valid! Membuka ' + targetTitle + '...', 'success');
                     if (targetUrl && /^(https?:\/\/|mailto:|tel:)/i.test(targetUrl)) {
-                        var win = window.open(targetUrl, '_blank', 'noopener,noreferrer');
-                        if (!win || win.closed || typeof win.closed === 'undefined') {
-                            showToast('Tab baru terhalang popup blocker. Mengalihkan langsung...', 'info');
-                            window.location.href = targetUrl;
-                        }
+                        var tempAnchor = document.createElement('a');
+                        tempAnchor.href = targetUrl;
+                        tempAnchor.target = '_blank';
+                        tempAnchor.rel = 'noopener noreferrer';
+                        document.body.appendChild(tempAnchor);
+                        tempAnchor.click();
+                        document.body.removeChild(tempAnchor);
                     }
                 }, 380);
             }
